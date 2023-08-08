@@ -14,7 +14,12 @@ import operatingSystem.Kernel;
  */
 public class MyKernel implements Kernel {
 
+    private Diretorio raiz;
+
     public MyKernel() {
+
+        this.raiz = new Diretorio("/",null);
+        raiz.setPai(raiz);
 
     }
 

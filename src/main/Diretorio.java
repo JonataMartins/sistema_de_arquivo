@@ -17,9 +17,9 @@ public class Diretorio {
     public Diretorio mkdir(String nome, Diretorio pai) {
 
         if (!nome.matches("^[a-zA-Z0-9].*") || nome.contains("/")) {
-            if(pai == null){}
-            else{
-            return null;
+            if (pai == null) {
+            } else {
+                return null;
             }
         }
 
@@ -36,22 +36,21 @@ public class Diretorio {
         return this;
     }
 
-    public Diretorio buscaDiretorioPeloNome (String nome){
-        if (nome.equals(".")){
+    public Diretorio buscaDiretorioPeloNome(String nome) {
+        if (nome.equals(".")) {
             return this;
-        }
-        else if (nome.equals("..")){
+        } else if (nome.equals("..")) {
             return this.pai;
-        }
-        else {
+        } else {
             for (Diretorio dir : filho) {
-                if (dir.getNome().equals(nome)){
+                if (dir.getNome().equals(nome)) {
                     return dir;
                 }
             }
         }
         return null;
     }
+
 
     // Função do codigo LS
 
@@ -75,6 +74,7 @@ public class Diretorio {
         return stringBuilder.toString();
 
     }
+
 
     // Getters e Setters
     public String getNome() {

@@ -10,8 +10,10 @@ public class Diretorio {
     private Diretorio pai;
     private String permissao;
     private List<Diretorio> filho;
+    private List<Arquivo> arquivo;
     private LocalDateTime dataHoraAtual;
     // LocalDateTime.now() para pegar a data
+
 
     // Função do codigo MKDIR
     public Diretorio mkdir(String nome, Diretorio pai) {

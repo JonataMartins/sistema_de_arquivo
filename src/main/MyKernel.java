@@ -16,7 +16,6 @@ public class MyKernel implements Kernel {
 
     private Diretorio raiz;
     private Diretorio atual;
-    
 
     public MyKernel() {
 
@@ -73,11 +72,11 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
-    
+
         if (parameters.equals(".")) {
         } else if (parameters.equals("..")) {
-                atual = atual.getPai();
-            
+            atual = atual.getPai();
+
         } else {
             Diretorio novoDiretorio = atual.buscaDiretorioPeloNome(parameters);
             if (novoDiretorio != null) {
@@ -89,25 +88,20 @@ public class MyKernel implements Kernel {
         }
 
         temp = atual;
-String currentDir = "";
+        String currentDir = "";
         // indique o diretório atual. Por exemplo... /
-        while(!temp.equals(raiz)){
+        while (!temp.equals(raiz)) {
 
-            if(temp.equals(atual)){
-                currentDir = temp.getNome()+currentDir;
-            }
-            else{
-                currentDir = temp.getNome()+"/"+currentDir;
+            if (temp.equals(atual)) {
+                currentDir = temp.getNome() + currentDir;
+            } else {
+                currentDir = temp.getNome() + "/" + currentDir;
             }
 
-            
             temp = temp.getPai();
         }
 
-        currentDir = "/"+currentDir;
-        
-
-        System.out.println(currentDir);
+        currentDir = "/" + currentDir;
 
         // setando parte gráfica do diretorio atual
         operatingSystem.fileSystem.FileSytemSimulator.currentDir = currentDir;
@@ -183,7 +177,13 @@ String currentDir = "";
         System.out.println("Chamada de Sistema: createfile");
         System.out.println("\tParametros: " + parameters);
 
+        Arquivo novoarquivo = new Arquivo();
+        novoarquivo.createfile(parameters);
+
         // inicio da implementacao do aluno
+
+
+
         // fim da implementacao do aluno
         return result;
     }

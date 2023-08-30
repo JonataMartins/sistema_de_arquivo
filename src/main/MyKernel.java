@@ -58,6 +58,8 @@ public class MyKernel implements Kernel {
         if (result.equals(null)) {
             return "Inválido";
         }
+
+        System.out.println("Atual mkdir:" + atual.getNome());
         // fim da implementacao do aluno
         return result;
     }
@@ -73,32 +75,29 @@ public class MyKernel implements Kernel {
 
         // inicio da implementacao do aluno
 
-        if (parameters.equals(".")) {
-        } else if (parameters.equals("..")) {
-            atual = atual.getPai();
+        temp = atual.caminhos(parameters, raiz, atual);
+        if (temp != null) {
+            atual = temp;
+            System.out.println("Atual:" + atual.getNome());
 
         } else {
-            Diretorio novoDiretorio = atual.buscaDiretorioPeloNome(parameters);
-            if (novoDiretorio != null) {
-                atual = novoDiretorio;
 
-            } else {
-                result = parameters + ": Diretório não existe.";
-            }
+            result = "não existe";
         }
 
-        temp = atual;
+        Diretorio temptemp = atual;
+
         String currentDir = "";
         // indique o diretório atual. Por exemplo... /
-        while (!temp.equals(raiz)) {
+        while (!temptemp.equals(raiz)) {
 
-            if (temp.equals(atual)) {
-                currentDir = temp.getNome() + currentDir;
+            if (temptemp.equals(atual)) {
+                currentDir = temptemp.getNome() + currentDir;
             } else {
-                currentDir = temp.getNome() + "/" + currentDir;
+                currentDir = temptemp.getNome() + "/" + currentDir;
             }
 
-            temp = temp.getPai();
+            temptemp = temptemp.getPai();
         }
 
         currentDir = "/" + currentDir;
@@ -177,12 +176,7 @@ public class MyKernel implements Kernel {
         System.out.println("Chamada de Sistema: createfile");
         System.out.println("\tParametros: " + parameters);
 
-        Arquivo novoarquivo = new Arquivo();
-        novoarquivo.createfile(parameters);
-
         // inicio da implementacao do aluno
-
-
 
         // fim da implementacao do aluno
         return result;

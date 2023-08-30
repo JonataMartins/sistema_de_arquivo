@@ -14,6 +14,51 @@ public class Diretorio {
     private LocalDateTime dataHoraAtual;
     // LocalDateTime.now() para pegar a data
 
+    public Diretorio caminhos(String caminho, Diretorio raiz, Diretorio atual) {
+
+        Diretorio aux;
+
+        if (caminho.startsWith("/")) {
+            aux = raiz;
+            caminho = caminho.substring(1);
+
+        } else {
+            aux = atual;
+        }
+
+        String[] partes = caminho.split("/");
+        for (String parte : partes) {
+            System.out.println("Caminho " + parte);
+        }
+
+        for (String parte : partes) {
+            boolean achou = false;
+            if (parte.equals(".")) {
+                achou = true;
+            } else if (parte.equals("..")) {
+                aux = aux.pai;
+                achou = true;
+            }
+
+            else {
+                for (Diretorio filhos : aux.filho) {
+                    if (filhos.getNome().equals(parte)) {
+                        aux = filhos;
+                        achou = true;
+                        break;
+                    }
+                }
+
+            }
+
+            if (!achou) {
+                return null;
+            }
+
+        }
+
+        return aux;
+    }
 
     // Função do codigo MKDIR
     public Diretorio mkdir(String nome, Diretorio pai) {
@@ -53,7 +98,6 @@ public class Diretorio {
         return null;
     }
 
-
     // Função do codigo LS
 
     public String ls(String parameters) {
@@ -76,7 +120,6 @@ public class Diretorio {
         return stringBuilder.toString();
 
     }
-
 
     // Getters e Setters
     public String getNome() {

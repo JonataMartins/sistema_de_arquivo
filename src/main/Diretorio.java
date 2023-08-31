@@ -61,26 +61,99 @@ public class Diretorio {
     }
 
     // Função do codigo MKDIR
-    public Diretorio mkdir(String nome, Diretorio pai) {
+    public Diretorio mkdir(String nome, Diretorio atual, Diretorio raiz) {
 
-        if (!nome.matches("^[a-zA-Z0-9].*") || nome.contains("/")) {
-            if (pai == null) {
-            } else {
-                return null;
-            }
+        // pra criar a raiz apenas
+        if (raiz == null) {
+            this.nome = "/";
+            this.pai = null;
+            this.permissao = "drwx";
+            this.dataHoraAtual = LocalDateTime.now();
+            this.filho = new ArrayList<>();
+
+            return this;
         }
 
-        this.nome = nome;
-        this.pai = pai;
-        this.permissao = "drwx";
-        this.dataHoraAtual = LocalDateTime.now();
-        this.filho = new ArrayList<>();
+        Diretorio aux;
 
-        if (pai != null) {
-            pai.filho.add(this);
+        // aqui vê se é pra começar na raiz ou no diretório atual
+        // se for na raiz tira a primeira / pra separar legal se nao o primeiro item
+        // fica vazio
+
+        if (nome.startsWith("/")) {
+            aux = raiz;
+            nome = nome.substring(1);
+        } else {
+            aux = atual;
+        }
+
+        // aqui separa os comandos
+        String[] partes = nome.split("/");
+
+        // aqui lê comando por comando
+        for (String parte : partes) {
+
+            if (parte.equals(".")) {
+                // se dor . nao faz nada
+
+            } else if (parte.equals("..")) {
+                // se for .. o aux vira o proprio pai como no cd ..
+
+                if (aux.pai == null) {
+                    return null;
+                }
+                aux = aux.pai;
+
+            } else {
+                boolean tem = false;
+
+                for (Diretorio filho : aux.filho) {
+                    // verifica se o filho existe
+                    if (parte.equals(filho.nome)) {
+                        // se existe ele entra nesse filho
+                        aux = filho;
+                        tem = true;
+                        break;
+                    }
+                }
+
+                if (tem == false) {
+                    // se nao existe ele cria
+
+                    Diretorio novo = new Diretorio();
+
+                    if (!parte.matches("^[a-zA-Z0-9].*") || parte.contains("/")) {
+                        if (pai == null) {
+                        } else {
+                            return null;
+                        }
+
+                    } else {
+
+                        novo.nome = parte;
+                        novo.pai = aux;
+                        novo.permissao = "drwx";
+                        novo.dataHoraAtual = LocalDateTime.now();
+                        novo.filho = new ArrayList<>();
+
+                        if (aux != null) {
+
+                            aux.filho.add(novo);
+
+                            // aqui ele ja entra na pasta que foi criada
+                            aux = novo;
+                        }
+
+                    }
+
+                }
+
+            }
+
         }
 
         return this;
+
     }
 
     public Diretorio buscaDiretorioPeloNome(String nome) {

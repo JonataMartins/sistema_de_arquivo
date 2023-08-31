@@ -20,13 +20,12 @@ public class MyKernel implements Kernel {
     public MyKernel() {
 
         this.raiz = new Diretorio();
-        raiz.mkdir("/", null);
+        raiz.mkdir("/", null, null);
         raiz.setPai(raiz);
         atual = raiz;
 
         System.out.println("-----raiz-----");
         System.out.println("nome: " + raiz.getNome());
-        System.out.println("pai: " + raiz.getPai());
 
     }
 
@@ -53,13 +52,12 @@ public class MyKernel implements Kernel {
         // inicio da implementacao do aluno
 
         Diretorio novodiretorio = new Diretorio();
-        novodiretorio.mkdir(parameters, atual);
+        novodiretorio.mkdir(parameters, atual, raiz);
 
         if (result.equals(null)) {
             return "Inválido";
         }
 
-        System.out.println("Atual mkdir:" + atual.getNome());
         // fim da implementacao do aluno
         return result;
     }
@@ -226,11 +224,11 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: sem parametros");
 
         // nome do aluno
-        String name = "Fulano da Silva";
+        String name = "Jônata Martins de Sousa";
         // numero de matricula
-        String registration = "2001.xx.yy.00.11";
+        String registration = "201911020008";
         // versao do sistema de arquivos
-        String version = "0.1";
+        String version = "1.2";
 
         result += "Nome do Aluno:        " + name;
         result += "\nMatricula do Aluno:   " + registration;

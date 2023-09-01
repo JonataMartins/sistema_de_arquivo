@@ -37,7 +37,7 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
-        result = atual.ls(parameters);
+        result = atual.ls(parameters, atual, raiz);
         // fim da implementacao do aluno
         return result;
     }
@@ -176,6 +176,9 @@ public class MyKernel implements Kernel {
 
         // inicio da implementacao do aluno
 
+        Arquivo novo = new Arquivo();
+        novo.createfile(parameters, atual, raiz); 
+
         // fim da implementacao do aluno
         return result;
     }
@@ -188,6 +191,9 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
+
+        result = atual.cat(parameters,raiz,atual);
+
         // fim da implementacao do aluno
         return result;
     }
@@ -228,7 +234,7 @@ public class MyKernel implements Kernel {
         // numero de matricula
         String registration = "201911020008";
         // versao do sistema de arquivos
-        String version = "1.2";
+        String version = "0.8";
 
         result += "Nome do Aluno:        " + name;
         result += "\nMatricula do Aluno:   " + registration;
@@ -236,5 +242,14 @@ public class MyKernel implements Kernel {
 
         return result;
     }
+
+
+    // Feitos-------------------------
+    //Info
+    //MKDIR
+    //CD
+    //CREATEFILE
+    //LS
+
 
 }

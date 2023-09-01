@@ -14,10 +14,19 @@ public class Diretorio {
     private LocalDateTime dataHoraAtual;
     // LocalDateTime.now() para pegar a data
 
+    // Aqui eu procuro e devolvo o diretório que eu procuro
     public Diretorio caminhos(String caminho, Diretorio raiz, Diretorio atual) {
 
         Diretorio aux;
 
+        // se o caminho for só / já retorna a raiz (fiz isso pra debugar o ls com
+        // caminho)
+        if (caminho.equals("/")) {
+            return raiz;
+        }
+
+        // se o primeiro for / quer dizer que começa na raiz se nao começa no atual
+        // diretorio
         if (caminho.startsWith("/")) {
             aux = raiz;
             caminho = caminho.substring(1);
@@ -26,21 +35,23 @@ public class Diretorio {
             aux = atual;
         }
 
+        // aqui reparte o caminho pela /
         String[] partes = caminho.split("/");
-        for (String parte : partes) {
-            System.out.println("Caminho " + parte);
-        }
 
         for (String parte : partes) {
+            // se achar a parte fica true
             boolean achou = false;
             if (parte.equals(".")) {
                 achou = true;
-            } else if (parte.equals("..")) {
+            }
+            // o .. volta pro pai
+            else if (parte.equals("..")) {
                 aux = aux.pai;
                 achou = true;
             }
 
             else {
+                // esse confere os filhos
                 for (Diretorio filhos : aux.filho) {
                     if (filhos.getNome().equals(parte)) {
                         aux = filhos;
@@ -51,6 +62,7 @@ public class Diretorio {
 
             }
 
+            // se não achou é porque o diretório não existe
             if (!achou) {
                 return null;
             }
@@ -70,6 +82,7 @@ public class Diretorio {
             this.permissao = "drwx";
             this.dataHoraAtual = LocalDateTime.now();
             this.filho = new ArrayList<>();
+            this.arquivo = new ArrayList<>();
 
             return this;
         }
@@ -135,6 +148,7 @@ public class Diretorio {
                         novo.permissao = "drwx";
                         novo.dataHoraAtual = LocalDateTime.now();
                         novo.filho = new ArrayList<>();
+                        novo.arquivo = new ArrayList<>();
 
                         if (aux != null) {
 
@@ -156,42 +170,152 @@ public class Diretorio {
 
     }
 
-    public Diretorio buscaDiretorioPeloNome(String nome) {
-        if (nome.equals(".")) {
-            return this;
-        } else if (nome.equals("..")) {
-            return this.pai;
-        } else {
-            for (Diretorio dir : filho) {
-                if (dir.getNome().equals(nome)) {
-                    return dir;
-                }
-            }
-        }
-        return null;
+    public void adicionaArquivo(Arquivo arquivo, Diretorio pai) {
+
+        pai.arquivo.add(arquivo);
+
     }
 
     // Função do codigo LS
 
-    public String ls(String parameters) {
+    public String ls(String parameters, Diretorio atual, Diretorio raiz) {
 
         StringBuilder stringBuilder = new StringBuilder();
 
         // Aqui é o Ls sem parametros
 
-        if (filho.isEmpty()) {
-            return "Sem filhos";
-        }
-
-        else if (parameters.equals("")) {
+        if (parameters.equals("")) {
 
             for (Diretorio Dfilho : filho) {
                 stringBuilder.append(Dfilho.getNome() + " ");
             }
+            for (Arquivo Darquivo : arquivo) {
+                stringBuilder.append(Darquivo.getNome() + " ");
+            }
+
+            if (stringBuilder.isEmpty()) {
+                stringBuilder.append("Não existe pastas nem arquivos");
+            }
+        }
+
+        else {
+            String[] partes = parameters.split(" ");
+
+            String nomeArquivo;
+            String caminho;
+
+            // Verificando as partes separadas
+            if (partes.length >= 2) {
+                nomeArquivo = partes[0];
+                caminho = partes[1];
+
+                System.out.println("Primeira parte: " + nomeArquivo);
+                System.out.println("Segunda parte: " + caminho);
+
+                Diretorio aux = new Diretorio();
+                aux = aux.caminhos(caminho, raiz, atual);
+
+                System.out.println("Nome Diretorio: " + aux.getNome());
+
+                for (Diretorio Dfilho : aux.filho) {
+
+                    stringBuilder.append(Dfilho.getPermissao() + "\t");
+                    stringBuilder.append(Dfilho.getDataHoraAtual() + "\t");
+                    stringBuilder.append(Dfilho.getNome() + "\t");
+                    stringBuilder.append("\n");
+                }
+                for (Arquivo Darquivo : aux.arquivo) {
+
+                    stringBuilder.append(Darquivo.getPermissao() + "\t");
+                    stringBuilder.append(Darquivo.getDataHoraAtual() + "\t");
+                    stringBuilder.append(Darquivo.getNome() + "\t");
+                    stringBuilder.append("\n");
+                }
+
+            } else {
+
+                if (parameters.equals("-l")) {
+
+                    Diretorio aux = new Diretorio();
+                    aux = atual;
+
+                    System.out.println("Nome Diretorio: " + aux.getNome());
+
+                    for (Diretorio Dfilho : aux.filho) {
+                        stringBuilder.append(Dfilho.getPermissao() + "\t");
+                        stringBuilder.append(Dfilho.getDataHoraAtual() + "\t");
+                        stringBuilder.append(Dfilho.getNome() + "\t");
+                        stringBuilder.append("\n");
+                    }
+                    for (Arquivo Darquivo : aux.arquivo) {
+
+                        stringBuilder.append(Darquivo.getPermissao() + "\t");
+                        stringBuilder.append(Darquivo.getDataHoraAtual() + "\t");
+                        stringBuilder.append(Darquivo.getNome() + "\t");
+                        stringBuilder.append("\n");
+                    }
+
+                } else {
+                    Diretorio aux = new Diretorio();
+                    aux = aux.caminhos(parameters, raiz, atual);
+
+                    System.out.println("Nome Diretorio: " + aux.getNome());
+
+                    for (Diretorio Dfilho : aux.filho) {
+                        stringBuilder.append(Dfilho.getNome() + "\t");
+                        stringBuilder.append("\n");
+                    }
+                    for (Arquivo Darquivo : aux.arquivo) {
+
+                        stringBuilder.append(Darquivo.getNome() + "\t");
+                        stringBuilder.append("\n");
+                    }
+                }
+
+            }
+
+        }
+
+        if (stringBuilder.isEmpty()) {
+            stringBuilder.append("Não existe pastas nem arquivos");
         }
 
         return stringBuilder.toString();
 
+    }
+
+    public String cat(String parameters, Diretorio raiz, Diretorio atual) {
+
+        String[] partes = parameters.lastIndexOf("/");
+
+        if(partes.length>=2){
+            System.out.println("Entrou aqui");
+        }
+
+        else{
+            boolean achou = false;
+            for(Arquivo novo: atual.arquivo){
+                if(novo.equals){
+                    achou = true;
+                    System.out.println(novo.getConteudo());
+
+
+                }
+
+            }
+
+            if(achou == false){
+                return "Arquivo não existe";
+            }
+
+
+        }
+
+        for (String parte : partes) {
+            System.out.println(parte);
+        }
+
+        return "";
     }
 
     // Getters e Setters
@@ -225,6 +349,14 @@ public class Diretorio {
 
     public void setFilho(List<Diretorio> filho) {
         this.filho = filho;
+    }
+
+    public List<Arquivo> getArquivo() {
+        return arquivo;
+    }
+
+    public void setArquivo(List<Arquivo> arquivo) {
+        this.arquivo = arquivo;
     }
 
     public LocalDateTime getDataHoraAtual() {

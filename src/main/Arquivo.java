@@ -14,43 +14,97 @@ public class Arquivo {
 
         String texto = parameters;
 
-        String[] partes = texto.split(" ",2);
+        String[] partes = texto.split(" ", 2);
 
         String primeiraParte;
         String segundaParte;
 
+        String nomeArquivo;
+        String conteudoArquivo;
+
         // Verificando as partes separadas
         if (partes.length >= 2) {
-            primeiraParte = partes[0];
-            segundaParte = partes[1];
-            
-            System.out.println("Primeira parte: " + primeiraParte);
-            System.out.println("Segunda parte: " + segundaParte);
-        } else {
-           primeiraParte = partes[0];
-            segundaParte = "";
-        }
+            nomeArquivo = partes[0];
+            conteudoArquivo = partes[1];
 
-        String nome;
-        String caminho = Atual;
+            System.out.println("Primeira parte: " + nomeArquivo);
+            System.out.println("Segunda parte: " + conteudoArquivo);
+        } else {
+
+            nomeArquivo = partes[0];
+            conteudoArquivo = "";
+        }
 
         int ultimaBarraIndex = texto.lastIndexOf("/");
         if (ultimaBarraIndex >= 0) {
+
             primeiraParte = texto.substring(0, ultimaBarraIndex);
             segundaParte = texto.substring(ultimaBarraIndex + 1);
 
-            System.out.println("Primeira parte dividida: " + primeiraParte);
-            System.out.println("Segunda parte dividida: " + segundaParte);
+            int firstSpaceIndex = segundaParte.indexOf(' ');
+
+            if (firstSpaceIndex != -1) {
+                nomeArquivo = segundaParte.substring(0, firstSpaceIndex);
+                conteudoArquivo = segundaParte.substring(firstSpaceIndex + 1);
+
+                System.out.println("Nome arquivo: " + nomeArquivo);
+                System.out.println("Conteudo: " + conteudoArquivo);
+            } else {
+                nomeArquivo = segundaParte;
+                System.out.println("Nome arquivo: " + nomeArquivo);
+                System.out.println("A string não contém espaço.");
+            }
+
+            
+
+            String caminho = primeiraParte;
+
+            System.out.println("Caminho " + caminho);
+
+            Diretorio aux = new Diretorio();
+
+            if (aux.caminhos(caminho, raiz, Atual) == null) {
+                System.out.println("Diretório não existente");
+            } else {
+                aux = aux.caminhos(caminho, raiz, Atual);
+                System.out.println();
+
+                for (Arquivo arquivo : aux.getArquivo()) {
+                    if (arquivo.getNome().equals(nomeArquivo)) {
+                        System.out.println("Arquivo Existente");
+                        return null;
+                    }
+                }
+
+                this.nome = nomeArquivo;
+                this.pai = aux;
+                this.permissao = "drwx";
+                this.dataHoraAtual = LocalDateTime.now();
+                this.conteudo = conteudoArquivo;
+
+                aux.adicionaArquivo(this, pai);
+
+            }
+
         } else {
             System.out.println("A string não contém / para dividir.");
+
+            for (Arquivo arquivo : Atual.getArquivo()) {
+                if (arquivo.getNome().equals(nomeArquivo)) {
+                    System.out.println("Arquivo Existente");
+                    return null;
+                }
+            }
+
+            this.nome = nomeArquivo;
+            this.pai = Atual;
+            this.permissao = "drwx";
+            this.dataHoraAtual = LocalDateTime.now();
+            this.conteudo = conteudoArquivo;
+
+            Atual.adicionaArquivo(this, Atual);
+
         }
-    
-
-
-    
-
-       
-    
 
         return this;
     }

@@ -285,37 +285,50 @@ public class Diretorio {
     }
 
     public String cat(String parameters, Diretorio raiz, Diretorio atual) {
+        String[] partes = parameters.split("/");
+        String caminho = "";
+        String nomeArquivo = "";
+        Diretorio aux;
 
-        String[] partes = parameters.lastIndexOf("/");
+        if (partes.length >= 2) {
+            // Obtém o índice da última barra
+            int lastBarIndex = parameters.lastIndexOf("/");
 
-        if(partes.length>=2){
-            System.out.println("Entrou aqui");
-        }
+            // Verifica se encontrou a última barra
+            if (lastBarIndex >= 0) {
+                // Obtém o nome do arquivo
+                nomeArquivo = partes[partes.length - 1];
+                // Obtém o conteúdo antes da última barra
+                caminho = parameters.substring(0, lastBarIndex);
 
-        else{
-            boolean achou = false;
-            for(Arquivo novo: atual.arquivo){
-                if(novo.equals){
-                    achou = true;
-                    System.out.println(novo.getConteudo());
+                aux = caminhos(caminho, raiz, atual);
 
-
+                if (aux == null) {
+                    return "Diretório não existente";
                 }
 
+                else {
+                    
+                    for (Arquivo arquivos : aux.arquivo) {
+                        if (nomeArquivo.equals(arquivos.getNome())) {
+                            
+                            return arquivos.getConteudo();
+                        }
+                    }
+
+                }
             }
-
-            if(achou == false){
-                return "Arquivo não existe";
+        } else {
+            nomeArquivo = parameters;
+            for (Arquivo arquivos : atual.arquivo) {
+                if (nomeArquivo.equals(arquivos.getNome())) {
+                    return arquivos.getConteudo();
+                }
             }
-
-
         }
 
-        for (String parte : partes) {
-            System.out.println(parte);
-        }
+        return "Arquivo não existe";
 
-        return "";
     }
 
     // Getters e Setters

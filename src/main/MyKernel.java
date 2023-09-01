@@ -234,7 +234,7 @@ public class MyKernel implements Kernel {
         // numero de matricula
         String registration = "201911020008";
         // versao do sistema de arquivos
-        String version = "0.8";
+        String version = "0.9";
 
         result += "Nome do Aluno:        " + name;
         result += "\nMatricula do Aluno:   " + registration;
@@ -250,6 +250,7 @@ public class MyKernel implements Kernel {
     //CD
     //CREATEFILE
     //LS
+    //CAT
 
 
 }

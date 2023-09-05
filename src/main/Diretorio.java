@@ -39,6 +39,7 @@ public class Diretorio {
         String[] partes = caminho.split("/");
 
         for (String parte : partes) {
+        
             // se achar a parte fica true
             boolean achou = false;
             if (parte.equals(".")) {
@@ -69,6 +70,7 @@ public class Diretorio {
 
         }
 
+        System.out.println("Diretorio: "+aux.getNome());
         return aux;
     }
 
@@ -193,7 +195,7 @@ public class Diretorio {
                 stringBuilder.append(Darquivo.getNome() + " ");
             }
 
-            if (stringBuilder.isEmpty()) {
+            if (stringBuilder.toString().isEmpty()) {
                 stringBuilder.append("Não existe pastas nem arquivos");
             }
         }
@@ -276,7 +278,7 @@ public class Diretorio {
 
         }
 
-        if (stringBuilder.isEmpty()) {
+        if (stringBuilder.toString().isEmpty()) {
             stringBuilder.append("Não existe pastas nem arquivos");
         }
 
@@ -308,10 +310,10 @@ public class Diretorio {
                 }
 
                 else {
-                    
+
                     for (Arquivo arquivos : aux.arquivo) {
                         if (nomeArquivo.equals(arquivos.getNome())) {
-                            
+
                             return arquivos.getConteudo();
                         }
                     }
@@ -329,6 +331,47 @@ public class Diretorio {
 
         return "Arquivo não existe";
 
+    }
+
+    public String chmod(String parameters, Diretorio raiz, Diretorio atual) {
+
+        String[] partes = parameters.split(" ");
+        String nomeArquivo;
+        String caminho;
+        Diretorio aux = new Diretorio();
+
+        for (String parte : partes) {
+            System.out.println(parte);
+
+        }
+
+        if (partes.length <= 1) {
+            return "Erro";
+
+        } else if (partes.length >= 2) {
+            if (partes[0].equals("-r")) {
+                caminho = partes[2];
+                System.out.println(partes[2]);
+
+                aux = aux.caminhos(caminho, raiz, atual);
+
+            } else {
+                System.out.println(partes[1]);
+
+                aux = aux.caminhos(partes[1], raiz, atual);
+
+                if (aux.equals(null)) {
+                    return "Error";
+                } else {
+
+                   System.out.println("Sim");
+                }
+
+            }
+
+        }
+
+        return "";
     }
 
     // Getters e Setters

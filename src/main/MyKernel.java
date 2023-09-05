@@ -163,6 +163,9 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
+        Diretorio novo = new Diretorio();
+        result = novo.chmod(parameters,raiz,atual);
+
         // fim da implementacao do aluno
         return result;
     }

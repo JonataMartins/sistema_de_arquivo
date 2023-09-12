@@ -39,7 +39,7 @@ public class Diretorio {
         String[] partes = caminho.split("/");
 
         for (String parte : partes) {
-        
+
             // se achar a parte fica true
             boolean achou = false;
             if (parte.equals(".")) {
@@ -70,7 +70,7 @@ public class Diretorio {
 
         }
 
-        System.out.println("Diretorio: "+aux.getNome());
+        System.out.println("Diretorio: " + aux.getNome());
         return aux;
     }
 
@@ -333,10 +333,108 @@ public class Diretorio {
 
     }
 
+    public String converte(String permissao) {
+        StringBuilder p = new StringBuilder();
+        char[] partes = permissao.toCharArray();
+    
+        for (char parte : partes) {
+            String perm;
+            switch (parte) {
+                case '0':
+                perm = "---";
+                    
+                    break;
+                case '1':
+                perm = "--x";
+                    
+                    break;
+                case '2':
+                perm = "-w-";
+                    
+                    break;
+                case '3':
+                perm = "-wx";
+                    
+                    break;
+                case '4':
+                perm = "r--";
+                  
+                    break;
+                case '5':
+                perm = "r-x";
+                  
+                    break;
+                case '6':
+                perm = "rw-";
+                   
+                    break;
+                case '7': 
+                perm = "rwx";
+
+                    break;
+                default:
+                perm = "";
+                   
+                    break;
+            }
+            p.append(perm);
+        }
+    
+        String g = p.toString();
+        return g;
+    }
+
+    public void mPermissao1(String p, Diretorio a) {
+
+        if (a == null) {
+            return;
+        }
+
+        for (Diretorio child : a.filho) {
+            mPermissao1(p, child);
+        }
+
+        if (p.equals("777")) {
+            if (a.arquivo.isEmpty()) {
+
+            } else {
+                for (Arquivo ar : a.arquivo) {
+                    ar.setPermissao("-rwxrwxrwx");
+                }
+            }
+
+            if (a.filho.isEmpty()) {
+
+            } else {
+                for (Diretorio dir : a.filho) {
+                    dir.permissao = "-rwxrwxrwx";
+                }
+            }
+
+        } else if (p.equals("774")) {
+            if (a.arquivo.isEmpty()) {
+
+            } else {
+                for (Arquivo ar : a.arquivo) {
+                    ar.setPermissao("drwx");
+                }
+            }
+
+            if (a.filho.isEmpty()) {
+
+            } else {
+                for (Diretorio dir : a.filho) {
+                    dir.permissao = "drwx";
+                }
+            }
+
+        }
+
+    }
+
     public String chmod(String parameters, Diretorio raiz, Diretorio atual) {
 
         String[] partes = parameters.split(" ");
-        String nomeArquivo;
         String caminho;
         Diretorio aux = new Diretorio();
 
@@ -346,17 +444,34 @@ public class Diretorio {
         }
 
         if (partes.length <= 1) {
-            return "Erro";
+            return "Erro Parametros insuficientes";
 
         } else if (partes.length >= 2) {
-            if (partes[0].equals("-r")) {
+            if (partes[0].equals("-r") || partes[0].equals("-R")) {
                 caminho = partes[2];
-                System.out.println(partes[2]);
 
                 aux = aux.caminhos(caminho, raiz, atual);
 
+                if (aux.equals(null)) {
+                    return "Error";
+                } else {
+                    String permissao = converte(partes[1]);
+
+                    if (partes[1].equals("777")) {
+                        aux.permissao = "-rwxrwxrwx";
+                        mPermissao1(partes[1], aux);
+
+                    } else if (partes[1].equals("774")) {
+                        aux.permissao = "drwx";
+                        mPermissao1(partes[1], aux);
+
+                    } else {
+                        return "Paramentro de permissão não encontrado";
+                    }
+
+                }
+
             } else {
-                System.out.println(partes[1]);
 
                 aux = aux.caminhos(partes[1], raiz, atual);
 
@@ -364,7 +479,18 @@ public class Diretorio {
                     return "Error";
                 } else {
 
-                   System.out.println("Sim");
+                    String permissao = converte(partes[0]);
+
+                    if (partes[0].equals("777")) {
+                        aux.permissao = "-rwxrwxrwx";
+
+                    } else if (partes[0].equals("774")) {
+                        aux.permissao = "drwx";
+
+                    } else {
+                        return "Paramentro de permissão não encontrado";
+                    }
+
                 }
 
             }

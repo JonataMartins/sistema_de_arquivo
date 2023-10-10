@@ -96,6 +96,13 @@ public class MyKernel2 implements Kernel {
         }
     }
 
+    public int procuraVazio (HardDisk hd){
+
+        
+
+
+
+    }
 
 
     public String ls(String parameters) {
@@ -118,6 +125,13 @@ public class MyKernel2 implements Kernel {
         String result = "";
         System.out.println("Chamada de Sistema: mkdir");
         System.out.println("\tParametros: " + parameters);
+
+
+
+        criaDir(parameters, dirAtual);
+
+
+        salvaNoHD(HD, );
 
         // inicio da implementacao do aluno
         // fim da implementacao do aluno

@@ -13,7 +13,7 @@ public class Main {
 
     public static void main(String[] args) {
         //instanciando o kernel definido pelo aluno
-        MyKernel1 k = new MyKernel1();
+        MyKernel2 k = new MyKernel2();
         //instanciando o simulador de Sistema de Arquivos
         new FileSytemSimulator(k).setVisible(true);
     }

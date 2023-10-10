@@ -217,7 +217,11 @@ public class Diretorio {
                 Diretorio aux = new Diretorio();
                 aux = aux.caminhos(caminho, raiz, atual);
 
-                System.out.println("Nome Diretorio: " + aux.getNome());
+                if (aux == null) {
+                    return "Diretorio não existente";
+                } else {
+                    System.out.println("Nome Diretorio: " + aux.getNome());
+                }
 
                 for (Diretorio Dfilho : aux.filho) {
 
@@ -239,9 +243,6 @@ public class Diretorio {
                 if (parameters.equals("-l")) {
 
                     Diretorio aux = new Diretorio();
-                    aux = atual;
-
-                    System.out.println("Nome Diretorio: " + aux.getNome());
 
                     for (Diretorio Dfilho : aux.filho) {
                         stringBuilder.append(Dfilho.getPermissao() + "\t");
@@ -261,7 +262,11 @@ public class Diretorio {
                     Diretorio aux = new Diretorio();
                     aux = aux.caminhos(parameters, raiz, atual);
 
-                    System.out.println("Nome Diretorio: " + aux.getNome());
+                    if (aux == null) {
+                        return "Diretorio não existente";
+                    } else {
+                        System.out.println("Nome Diretorio: " + aux.getNome());
+                    }
 
                     for (Diretorio Dfilho : aux.filho) {
                         stringBuilder.append(Dfilho.getNome() + "\t");
@@ -336,99 +341,83 @@ public class Diretorio {
     public String converte(String permissao) {
         StringBuilder p = new StringBuilder();
         char[] partes = permissao.toCharArray();
-    
+
         for (char parte : partes) {
             String perm;
             switch (parte) {
                 case '0':
-                perm = "---";
-                    
+                    perm = "---";
+
                     break;
                 case '1':
-                perm = "--x";
-                    
+                    perm = "--x";
+
                     break;
                 case '2':
-                perm = "-w-";
-                    
+                    perm = "-w-";
+
                     break;
                 case '3':
-                perm = "-wx";
-                    
+                    perm = "-wx";
+
                     break;
                 case '4':
-                perm = "r--";
-                  
+                    perm = "r--";
+
                     break;
                 case '5':
-                perm = "r-x";
-                  
+                    perm = "r-x";
+
                     break;
                 case '6':
-                perm = "rw-";
-                   
+                    perm = "rw-";
+
                     break;
-                case '7': 
-                perm = "rwx";
+                case '7':
+                    perm = "rwx";
 
                     break;
                 default:
-                perm = "";
-                   
+                    perm = "";
+
                     break;
             }
             p.append(perm);
         }
-    
+
         String g = p.toString();
         return g;
     }
 
-    public void mPermissao1(String p, Diretorio a) {
+    public String mPermissao1(String p, Diretorio a) {
+
+        String perm = converte(p);
 
         if (a == null) {
-            return;
+            return "";
         }
 
         for (Diretorio child : a.filho) {
             mPermissao1(p, child);
         }
 
-        if (p.equals("777")) {
-            if (a.arquivo.isEmpty()) {
+        if (a.arquivo.isEmpty()) {
 
-            } else {
-                for (Arquivo ar : a.arquivo) {
-                    ar.setPermissao("-rwxrwxrwx");
-                }
+        } else {
+            for (Arquivo ar : a.arquivo) {
+                ar.setPermissao("a" + perm);
             }
-
-            if (a.filho.isEmpty()) {
-
-            } else {
-                for (Diretorio dir : a.filho) {
-                    dir.permissao = "-rwxrwxrwx";
-                }
-            }
-
-        } else if (p.equals("774")) {
-            if (a.arquivo.isEmpty()) {
-
-            } else {
-                for (Arquivo ar : a.arquivo) {
-                    ar.setPermissao("drwx");
-                }
-            }
-
-            if (a.filho.isEmpty()) {
-
-            } else {
-                for (Diretorio dir : a.filho) {
-                    dir.permissao = "drwx";
-                }
-            }
-
         }
+
+        if (a.filho.isEmpty()) {
+
+        } else {
+            for (Diretorio dir : a.filho) {
+                dir.permissao = "d" + perm;
+            }
+        }
+
+        return "";
 
     }
 
@@ -455,19 +444,9 @@ public class Diretorio {
                 if (aux.equals(null)) {
                     return "Error";
                 } else {
-                    String permissao = converte(partes[1]);
 
-                    if (partes[1].equals("777")) {
-                        aux.permissao = "-rwxrwxrwx";
-                        mPermissao1(partes[1], aux);
-
-                    } else if (partes[1].equals("774")) {
-                        aux.permissao = "drwx";
-                        mPermissao1(partes[1], aux);
-
-                    } else {
-                        return "Paramentro de permissão não encontrado";
-                    }
+                    aux.permissao = "d" + converte(partes[1]);
+                    mPermissao1(partes[1], aux);
 
                 }
 
@@ -479,17 +458,8 @@ public class Diretorio {
                     return "Error";
                 } else {
 
-                    String permissao = converte(partes[0]);
-
-                    if (partes[0].equals("777")) {
-                        aux.permissao = "-rwxrwxrwx";
-
-                    } else if (partes[0].equals("774")) {
-                        aux.permissao = "drwx";
-
-                    } else {
-                        return "Paramentro de permissão não encontrado";
-                    }
+                    aux.permissao = "d" + converte(partes[1]);
+                    mPermissao1(partes[0], aux);
 
                 }
 
@@ -498,6 +468,61 @@ public class Diretorio {
         }
 
         return "";
+    }
+
+    public String rm(String parameters, Diretorio raiz, Diretorio atual) {
+
+        String[] partes = parameters.split(" ");
+
+        String func;
+        String caminho;
+
+        if (partes.length == 1) {
+
+            int lastBarIndex = parameters.lastIndexOf("/");
+            String nomeArquivo = parameters.substring(lastBarIndex+1);;
+
+            // Obtém o conteúdo antes da última barra
+            caminho = parameters.substring(0, lastBarIndex);
+
+            System.out.println("Caminho:" + caminho);
+            System.out.println("Nome Arquivo:" + nomeArquivo);
+
+            Diretorio aux = new Diretorio();
+            aux = aux.caminhos(caminho, raiz, atual);
+
+            if (aux == null) {
+                return "Diretorio não existente";
+            } else {
+                System.out.println("Nome Diretorio: " + aux.getNome());
+            }
+
+            for(Diretorio filhos: filho){
+                System.out.println(filhos);
+            }
+
+        }
+
+        // Verificando as partes separadas
+        if (partes.length >= 2) {
+            func = partes[0];
+            caminho = partes[1];
+
+            System.out.println("Primeira parte: " + func);
+            System.out.println("Caminho: " + caminho);
+
+            Diretorio aux = new Diretorio();
+            aux = aux.caminhos(caminho, raiz, atual);
+
+            if (aux == null) {
+                return "Diretorio não existente";
+            } else {
+                System.out.println("Nome Diretorio: " + aux.getNome());
+            }
+        }
+
+        return "";
+
     }
 
     // Getters e Setters

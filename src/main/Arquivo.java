@@ -54,9 +54,7 @@ public class Arquivo {
                 System.out.println("Nome arquivo: " + nomeArquivo);
                 System.out.println("A string não contém espaço.");
             }
-
             
-
             String caminho = primeiraParte;
 
             System.out.println("Caminho " + caminho);

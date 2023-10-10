@@ -12,12 +12,12 @@ import operatingSystem.Kernel;
  *
  * @author nome do aluno...
  */
-public class MyKernel implements Kernel {
+public class MyKernel1 implements Kernel {
 
     private Diretorio raiz;
     private Diretorio atual;
 
-    public MyKernel() {
+    public MyKernel1() {
 
         this.raiz = new Diretorio();
         raiz.mkdir("/", null, null);
@@ -151,6 +151,7 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
+        result = atual.rm(parameters,raiz,atual);
         // fim da implementacao do aluno
         return result;
     }
@@ -254,7 +255,15 @@ public class MyKernel implements Kernel {
     //CREATEFILE
     //LS
     //CAT
-    
+    //CHMOD
+
+
+    // NÃO FEITOS
+    //mv
+    //rm
+    //rmdir
+    //batch
+    //dump
 
 
 }

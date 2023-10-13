@@ -9,6 +9,7 @@ import hardware.HardDisk;
 import static binary.Binario.binaryStringToInt;
 import static binary.Binario.intToBinaryString;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -28,23 +29,8 @@ public class MyKernel2 implements Kernel {
         int byteTamanho = 8;
         int blocoTamanho = 512 * byteTamanho;
         String dirRaiz = criaDir("/", raiz);
-        salvaNoHD(HD, dirRaiz, blocoTamanho);
-
-    }
-
-    public String criaDir(String nome, int dirpai) {
-        String estado = "d";
-        nome = String.format("%-" + 86 + "s", nome);
-        String pai = String.format("%-" + 10 + "s", Integer.toString(dirpai));
-        String dirFilhos = String.format("%-" + 200 + "s", "");
-        String dirArquivos = String.format("%-" + 200 + "s", "");
-        LocalDateTime dataAtual = LocalDateTime.now();
-        DateTimeFormatter formato = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
-        String data = dataAtual.format(formato);
-        String permissao = "777";
-
-        return estado + nome + pai + dirFilhos + dirArquivos + data + permissao;
-
+        salvaNoHD(HD, dirRaiz, 0);
+        procuraFilho(HD, dirAtual);
     }
 
     public static boolean[] stringToBinaryArray(String input) {
@@ -88,22 +74,125 @@ public class MyKernel2 implements Kernel {
         return sb.toString();
     }
 
-    public void salvaNoHD(HardDisk hd, String texto, int posicao) {
+    public static void atualizaPaiDir(HardDisk hd, int dirPai, int dirFilho) {
+
+        String resultado = lerHD(hd, dirPai, 512);
+
+        String estado = resultado.substring(0, 1);
+        String nome = resultado.substring(1, 87).replaceAll("\\s+", "");
+        String pai = resultado.substring(87, 97).replaceAll("\\s+", "");
+        String dirFilhos[] = new String[20];
+        String dirArquivos = resultado.substring(297, 497).replaceAll("\\s+", "");
+        String data = resultado.substring(497, 509).replaceAll("\\s+", "");
+        String permissao = resultado.substring(509, 512).replaceAll("\\s+", "");
+
+        for (int i = 0; i < 20; i++) {
+            dirFilhos[i] = resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", "");
+        }
+
+        boolean tem = false;
+
+        for (int i = 0; i < 20; i++) {
+            if (resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", "").equals("")) {
+                dirFilhos[i] = String.format("%-" + 10 + "s", Integer.toString(dirFilho));
+            
+                tem = true;
+
+                break;
+            }
+        }
+
+        if (!tem) {
+            System.out.println("Diretorio cheio");
+
+        } else {
+            StringBuilder filho = new StringBuilder();
+            for (int i = 0; i < 20; i++) {
+                filho.append(dirFilhos[i]);
+            }
+
+            String atualizada = estado + nome + pai + filho + dirArquivos + data + permissao;
+
+            System.out.println("String Atualizada: " + atualizada);
+            salvaNoHD(hd, atualizada, dirPai);
+        }
+
+    }
+
+    public String criaDir(String nome, int dirpai) {
+        String estado = "d";
+        nome = String.format("%-" + 86 + "s", nome);
+        String pai = String.format("%-" + 10 + "s", Integer.toString(dirpai));
+        String dirFilhos = String.format("%-" + 200 + "s", "");
+        String dirArquivos = String.format("%-" + 200 + "s", "");
+        LocalDateTime dataAtual = LocalDateTime.now();
+        DateTimeFormatter formato = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+        String data = dataAtual.format(formato);
+        String permissao = "777";
+
+        return estado + nome + pai + dirFilhos + dirArquivos + data + permissao;
+
+    }
+
+    public static void exibeHD(HardDisk hd, int dirAtual) {
+
+        for (int i = 0; i < 512; i++) {
+            System.out.println(i + ":" + lerHD(hd, dirAtual, 512).charAt(i));
+        }
+
+    }
+
+    public static String lerHD(HardDisk hd, int posicao, int tamanho) {
+        boolean[] bits = new boolean[tamanho * 8];
+
+        for (int i = 0; i < bits.length; i++) {
+            bits[i] = hd.getBitDaPosicao(posicao * 512 * 8 + i);
+
+        }
+
+        return binaryArrayToString(bits);
+    }
+
+    public static int procuraPosicaoVaziaHD(HardDisk hd) {
+        for (int i = 0; i < 134217728; i++) {
+            String info = lerHD(hd, i, 1);
+            if (!info.equals("d") && !info.equals("a")) {
+                System.out.println("ACHOU :" + i);
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static int procuraPai(HardDisk hd, int diratual) {
+        String resultado = lerHD(hd, diratual, 512);
+        return Integer.parseInt(resultado.substring(87, 97).replaceAll("\\s+", ""));
+    }
+
+    public static int procuraFilho(HardDisk hd, int dirAtual) {
+        String resultado = lerHD(hd, dirAtual, 512);
+
+        String[] filhos = new String[20];
+
+        for (int i = 0; i < 20; i++) {
+            filhos[i] = resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", "");
+            System.out.println("Filho" + i + ":" + filhos[i]);
+
+        }
+
+        return 0;
+    }
+
+    public static void salvaNoHD(HardDisk hd, String texto, int posicao) {
         boolean[] bits = stringToBinaryArray(texto);
 
-        for(int i = 0; i < bits.length; i++){
-            hd.setBitDaPosicao(bits[i], posicao+1);
+        for (int i = 0; i < bits.length; i++) {
+            hd.setBitDaPosicao(bits[i], posicao * 512 * 8 + i);
         }
     }
 
-    public int procuraVazio (HardDisk hd){
-
-        
-
-
-
-    }
-
+    // COMEÇO DAS NÃO AUXILIARES
+    // --------------------------------------------------------------------------------------------------
 
     public String ls(String parameters) {
         // variavel result deverah conter o que vai ser impresso na tela apos comando do
@@ -126,12 +215,72 @@ public class MyKernel2 implements Kernel {
         System.out.println("Chamada de Sistema: mkdir");
         System.out.println("\tParametros: " + parameters);
 
+        String nome = parameters;
+        int aux;
 
+        if (nome.equals("/")) {
+            System.out.println("Diretorio ja existe");
+            return "Diretorio raiz ja existe";
+        }
+
+        // aqui vê se é pra começar na raiz ou no diretório atual
+        // se for na raiz tira a primeira / pra separar legal se nao o primeiro item
+        // fica vazio
+        if (nome.startsWith("/")) {
+            aux = raiz;
+            nome = nome.substring(1);
+        } else {
+            aux = dirAtual;
+        }
+
+        // aqui separa os comandos
+        String[] partes = nome.split("/");
+
+        // aqui lê comando por comando
+        for (String parte : partes) {
+
+            if (parte.equals(".")) {
+                // se dor . nao faz nada
+
+            }
+
+            else if (parte.equals("..")) {
+
+                int pai = procuraPai(HD, aux);
+                aux = pai;
+
+            }
+
+            else {
+                boolean tem = false;
+
+                int filho = procuraFilho(HD, aux);
+
+                /*
+                 * while(filho != 0){
+                 * String resultado = lerHD(HD, filho, 512);
+                 * String nomeFilho = resultado.substring(1, 87).replaceAll("\\s+", "");
+                 * if(nomeFilho.equals(parte)){
+                 * tem = true;
+                 * aux = filho;
+                 * break;
+                 * }
+                 * filho = Integer.parseInt(resultado.substring(97, 107).replaceAll("\\s+",
+                 * ""));
+                 * }
+                 */
+
+            }
+
+        }
 
         criaDir(parameters, dirAtual);
 
-
-        salvaNoHD(HD, );
+        salvaNoHD(HD, criaDir(parameters, dirAtual), procuraPosicaoVaziaHD(HD));
+        System.out.println("Proximo é o Atualiza");
+        atualizaPaiDir(HD, procuraPai(HD, aux), aux);
+        System.out.println("Proximo é o Exibe");
+        exibeHD(HD, aux);
 
         // inicio da implementacao do aluno
         // fim da implementacao do aluno

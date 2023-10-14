@@ -1,9 +1,5 @@
 package main;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 import operatingSystem.Kernel;
 import hardware.HardDisk;
 import static binary.Binario.binaryStringToInt;
@@ -19,7 +15,7 @@ import java.util.Date;
  * Kernel desenvolvido pelo aluno. Outras classes criadas pelo aluno podem ser
  * utilizadas, como por exemplo: - Arvores; - Filas; - Pilhas; - etc...
  *
- * @author nome do aluno...
+ * @author Jônata Martins de Sousa
  */
 public class MyKernel2 implements Kernel {
 
@@ -109,7 +105,6 @@ public class MyKernel2 implements Kernel {
         }
 
         if (!tem) {
-            System.out.println("Diretorio cheio");
 
         } else {
 
@@ -129,8 +124,6 @@ public class MyKernel2 implements Kernel {
             filho.append(permissao);
 
             String converte = filho.toString();
-
-            System.out.println("String Atualizada: " + converte);
             salvaNoHD(hd, converte, dirPai);
 
         }
@@ -227,7 +220,6 @@ public class MyKernel2 implements Kernel {
             } else {
                 int PF = procuraFilho(hd, aux, p);
                 if (PF == -1) {
-                    System.out.println("Diretorio nao existe");
                     return -1;
                 } else {
                     aux = PF;
@@ -355,9 +347,8 @@ public class MyKernel2 implements Kernel {
         String g = p.toString();
         return g;
     }
-    
+
     public static String converteData(String numeroData) {
-        
 
         String ano = numeroData.substring(0, 4);
         String mes = numeroData.substring(4, 6);
@@ -368,9 +359,6 @@ public class MyKernel2 implements Kernel {
         return dia + "/" + mes + "/" + ano + " " + hora + ":" + minuto;
     }
 
-    
-
-    
     // COMEÇO DAS NÃO AUXILIARES
     // --------------------------------------------------------------------------------------------------
 
@@ -400,7 +388,6 @@ public class MyKernel2 implements Kernel {
 
             }
 
-
             for (int i = 0; i < 20; i++) {
                 if (resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", "").equals("")) {
                 } else {
@@ -412,7 +399,6 @@ public class MyKernel2 implements Kernel {
                 }
 
             }
-            
 
             result = sb.toString();
 
@@ -430,9 +416,6 @@ public class MyKernel2 implements Kernel {
             if (partes.length >= 2) {
                 l = partes[0];
                 caminho = partes[1];
-
-                System.out.println("Nome do arquivo: " + l);
-                System.out.println("Caminho: " + caminho);
 
                 int aux = procuraDiretorio(HD, caminho, dirAtual);
 
@@ -588,7 +571,6 @@ public class MyKernel2 implements Kernel {
                         }
 
                     }
-          
 
                     for (int i = 0; i < 20; i++) {
                         if (resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", "").equals("")) {
@@ -602,7 +584,6 @@ public class MyKernel2 implements Kernel {
                         }
 
                     }
-                  
 
                     result = sb.toString();
 
@@ -630,7 +611,6 @@ public class MyKernel2 implements Kernel {
         int aux;
 
         if (nome.equals("/")) {
-            System.out.println("Diretorio ja existe");
             return "Diretorio raiz ja existe";
         }
 
@@ -668,31 +648,24 @@ public class MyKernel2 implements Kernel {
                 int FC = filhocheio(HD, aux);
 
                 if (FC == -1) {
-                    System.out.println("Diretorio cheio");
                     return "Qunatidade de diretorio cheio";
                 } else {
                     if (PF == -1) {
-                        System.out.println("Diretorio nao existe");
                         String criado = criaDir(parte, aux);
                         int posicao = procuraPosicaoVaziaHD(HD);
                         if (posicao == -10) {
-                            System.out.println("HD cheio");
                             return "HD cheio";
                         }
                         if (!parte.matches("^[a-zA-Z0-9].*")) {
-                            System.out.println("Nome invalido");
                             return "Nome invalido";
                         }
 
                         salvaNoHD(HD, criado, posicao);
                         atualizaPaiDir(HD, aux, posicao);
-                        System.out.println("Diretorio criado");
                         result = "Diretorio criado";
                         aux = posicao;
 
                     } else {
-                        System.out.println("Diretorio ja existe");
-
                         result = "Diretorio ja existe";
                         aux = PF;
                     }
@@ -722,11 +695,9 @@ public class MyKernel2 implements Kernel {
         int aux = procuraDiretorio(HD, parameters, dirAtual);
 
         if (aux == -1) {
-            System.out.println("Diretorio nao existe");
             return "Diretorio nao existe";
         } else {
             dirAtual = aux;
-            System.out.println("Diretorio atual: " + dirAtual);
             currentDir = retornaNome(HD, dirAtual);
         }
 
@@ -867,13 +838,12 @@ public class MyKernel2 implements Kernel {
     }
 
     // Funções 100% implementadas
-    //info
-    //cd
-    //mkdir 
-    //ls
+    // info
+    // cd
+    // mkdir
+    // ls
 
     // Funções em andamento
     //
-    
 
 }

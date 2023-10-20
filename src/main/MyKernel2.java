@@ -837,12 +837,13 @@ public class MyKernel2 implements Kernel {
             else {
 
                 int PF = procuraFilho(HD, aux, parte);
+                int PA = procuraArquivo(HD, aux, parte);
                 int FC = filhocheio(HD, aux);
 
                 if (FC == -1) {
                     return "Qunatidade de diretorio cheio";
                 } else {
-                    if (PF == -1) {
+                    if (PF == -1 && PA == -1) {
                         String criado = criaDir(parte, aux);
                         int posicao = procuraPosicaoVaziaHD(HD);
                         if (posicao == -10) {
@@ -858,7 +859,7 @@ public class MyKernel2 implements Kernel {
                         aux = posicao;
 
                     } else {
-                        result = "Diretorio ja existe";
+                        result = "Algum diretorio ou arquivo ja possui esse nome";
                         aux = PF;
                     }
                 }
@@ -975,7 +976,7 @@ public class MyKernel2 implements Kernel {
             caminho = partes[1];
 
             if (permissao.length() != 3) {
-                return "Permissao invalida, digite 3 numeros";
+                return "Permissao invalida, digite 3 numeros de 0 a 7";
             }
             if (!permissao.matches("[0-7]+")) {
                 return "Permissao invalida, digite apenas numeros de 0 a 7";
@@ -1050,6 +1051,10 @@ public class MyKernel2 implements Kernel {
             String mod = partes[0];
             permissao = partes[1];
             caminho = partes[2];
+
+            System.out.println("Mod " + mod);
+            System.out.println("Permissao " + permissao);
+            System.out.println("Caminho " + caminho);
 
         }
 
@@ -1132,11 +1137,12 @@ public class MyKernel2 implements Kernel {
 
             int PA = procuraArquivo(HD, aux, nomeArquivo);
             int AC = arquivocheio(HD, aux);
+            int PF = procuraFilho(HD, aux, nomeArquivo);
 
             if (AC == -1) {
                 return "Quantidade de arquivos cheio";
             } else {
-                if (PA == -1) {
+                if (PA == -1 && PF == -1) {
                     int posicao = procuraPosicaoVaziaHD(HD);
                     if (posicao == -10) {
                         return "HD cheio";
@@ -1302,12 +1308,13 @@ public class MyKernel2 implements Kernel {
     // cd
     // ls
     // cat
+    // mkdir
+    // createfile
     
 
     // Funções em andamento
     // chmod falta o -r
-    // createfile (não deixar criar se existir o nome nos diretorios tbm)
-    // mkdir   (mesma do createfile)
+
 
     // Funções não feitas
     // rmdir

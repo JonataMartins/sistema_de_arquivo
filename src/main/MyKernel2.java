@@ -5,6 +5,7 @@ import hardware.HardDisk;
 import static binary.Binario.binaryStringToInt;
 import static binary.Binario.intToBinaryString;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -29,6 +30,21 @@ public class MyKernel2 implements Kernel {
         String dirRaiz = criaDir("/", raiz);
         salvaNoHD(HD, dirRaiz, 0);
 
+    }
+
+    public static void limparTerminal() {
+        try {
+            if (System.getProperty("os.name").contains("Windows")) {
+                // Se estiver em um sistema Windows
+                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            } else {
+                // Se estiver em um sistema Unix/Linux
+                new ProcessBuilder("clear").inheritIO().start().waitFor();
+            }
+        } catch (IOException | InterruptedException e) {
+            // Lidar com exceções, se necessário
+            e.printStackTrace();
+        }
     }
 
     public static boolean[] stringToBinaryArray(String input) {
@@ -72,6 +88,37 @@ public class MyKernel2 implements Kernel {
         return sb.toString();
     }
 
+    public static void atualizaPermissaoGeral(HardDisk hd, int dirAtual, String permissao) {
+        // 1 é pq existe algum filho
+        if (existeFilho(hd, dirAtual) == 1) {
+            int[] todosFilhos = new int[20];
+            todosFilhos = retornaFilho(hd, dirAtual);
+
+            for (int i = 0; i < 20; i++) {
+                if (todosFilhos[i] != -1) {
+                    atualizaPermissaoGeral(hd, todosFilhos[i], permissao);
+                }
+            }
+
+            for (int i = 0; i < 20; i++) {
+                int[] todosArquivos = retornaArquivo(hd, dirAtual); // Modificado para retornar arquivos de dirAtual
+
+                if (todosArquivos[i] != -1) {
+                    atualizaPermissaoArquivo(hd, todosArquivos[i], permissao);
+                }
+            }
+
+            int[] tFilhos = retornaFilho(hd, dirAtual); // Modificado para retornar filhos de dirAtual
+            for (int i = 0; i < 20; i++) {
+                if (tFilhos[i] != -1) {
+                    atualizaPermissaoDir(hd, tFilhos[i], permissao);
+                }
+            }
+        } else {
+            // O que fazer quando não há filhos?
+        }
+    }
+
     public static void atualizaPaiArquivo(HardDisk hd, int dirPai, int dirFilho) {
 
         String resultado = lerHD(hd, dirPai, 512);
@@ -79,54 +126,45 @@ public class MyKernel2 implements Kernel {
         String estado = resultado.substring(0, 1);
         String nome = resultado.substring(1, 87);
         String pai = resultado.substring(87, 97);
-        String dirFilhos[] = new String[20];
-        String dirArquivos[] = new String[20];
         String data = resultado.substring(497, 509);
         String permissao = resultado.substring(509, 512);
 
-        for (int i = 0; i < 20; i++) {
-            dirFilhos[i] = resultado.substring(297 + (i * 10), 307 + (i * 10));
-        }
+        String[] dirArquivos = new String[20];
+        String[] dirFilhos = new String[20];
 
         for (int i = 0; i < 20; i++) {
-            dirArquivos[i] = resultado.substring(97 + (i * 10), 107 + (i * 10));
+            dirArquivos[i] = resultado.substring(297 + (i * 10), 307 + (i * 10));
+            dirFilhos[i] = resultado.substring(97 + (i * 10), 107 + (i * 10));
         }
 
         boolean tem = false;
 
         for (int i = 0; i < 20; i++) {
-            if (resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", "").equals("")) {
-                dirFilhos[i] = String.format("%-" + 10 + "s", Integer.toString(dirFilho));
-
+            if (dirArquivos[i].replaceAll("\\s+", "").equals("")) {
+                dirArquivos[i] = String.format("%-" + 10 + "s", Integer.toString(dirFilho));
                 tem = true;
-
                 break;
             }
         }
 
-        if (!tem) {
-
-        } else {
-
-            StringBuilder filho = new StringBuilder();
-            filho.append(estado);
-            filho.append(nome);
-            filho.append(pai);
+        if (tem) {
+            StringBuilder arquivo = new StringBuilder();
+            arquivo.append(estado);
+            arquivo.append(nome);
+            arquivo.append(pai);
             for (int i = 0; i < 20; i++) {
-                filho.append(dirArquivos[i]);
+                arquivo.append(dirFilhos[i]);
             }
             for (int i = 0; i < 20; i++) {
-                filho.append(dirFilhos[i]);
+                arquivo.append(dirArquivos[i]);
             }
 
-            filho.append(data);
-            filho.append(permissao);
+            arquivo.append(data);
+            arquivo.append(permissao);
 
-            String converte = filho.toString();
+            String converte = arquivo.toString();
             salvaNoHD(hd, converte, dirPai);
-
         }
-
     }
 
     public static void atualizaPaiDir(HardDisk hd, int dirPai, int dirFilho) {
@@ -376,7 +414,6 @@ public class MyKernel2 implements Kernel {
         for (int i = 0; i < 134217728; i++) {
             String info = lerHD(hd, i, 1);
             if (!info.equals("d") && !info.equals("a")) {
-                System.out.println("ACHOU :" + i);
                 return i;
             }
         }
@@ -443,11 +480,11 @@ public class MyKernel2 implements Kernel {
 
             } else {
                 filho = retornaNome(hd,
-                        binaryStringToInt(resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", "")));
+                        Integer.parseInt(resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", "")));
 
                 if (filho.equals(nome)) {
 
-                    return binaryStringToInt(
+                    return Integer.parseInt(
                             resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", ""));
                 }
 
@@ -468,18 +505,17 @@ public class MyKernel2 implements Kernel {
 
             } else {
                 filho = retornaNome(hd,
-                        binaryStringToInt(resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", "")));
+                        Integer.parseInt(resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", "")));
 
                 if (filho.equals(nome)) {
 
-                    return binaryStringToInt(resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", ""));
+                    return Integer.parseInt(resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", ""));
                 }
 
             }
 
         }
 
-        // se tiver cheio;
         return -1;
     }
 
@@ -540,10 +576,99 @@ public class MyKernel2 implements Kernel {
 
     }
 
+    public static int[] retornaFilho(HardDisk hd, int dirAtual) {
+
+        String resultado = lerHD(hd, dirAtual, 512);
+        int[] filhos = new int[20];
+
+        for (int i = 0; i < 20; i++) {
+            if (!resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", "").equals("")) {
+                filhos[i] = Integer.parseInt(
+                        resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", ""));
+
+            } else {
+                filhos[i] = -1;
+            }
+
+        }
+
+        return filhos;
+
+    }
+
+    public static int existeFilho(HardDisk hd, int dirAtual) {
+        String resultado = lerHD(hd, dirAtual, 512);
+        int[] filhos = new int[20];
+        int cont = 0;
+        for (int i = 0; i < 20; i++) {
+            if (!resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", "").equals("")) {
+                filhos[i] = Integer.parseInt(
+                        resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", ""));
+                cont++;
+            }
+
+        }
+
+        // não
+        if (cont == 0) {
+            return 0;
+        }
+        // sim
+        else {
+            return 1;
+        }
+
+    }
+
+    public static int existeArquivo(HardDisk hd, int dirAtual) {
+
+        String resultado = lerHD(hd, dirAtual, 512);
+        int[] arquivos = new int[20];
+        int cont = 0;
+        for (int i = 0; i < 20; i++) {
+            if (!resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", "").equals("")) {
+                arquivos[i] = Integer.parseInt(
+                        resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", ""));
+                cont++;
+            }
+
+        }
+
+        // não
+        if (cont == 0) {
+            return 0;
+        }
+        // sim
+        else {
+            return 1;
+        }
+
+    }
+
+    public static int[] retornaArquivo(HardDisk hd, int dirAtual) {
+        String resultado = lerHD(hd, dirAtual, 512);
+        int[] arquivos = new int[20];
+
+        for (int i = 0; i < 20; i++) {
+            if (!resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", "").equals("")) {
+                arquivos[i] = Integer.parseInt(
+                        resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", ""));
+
+            } else {
+                arquivos[i] = -1;
+            }
+
+        }
+
+        return arquivos;
+
+    }
+
     // COMEÇO DAS NÃO AUXILIARES
     // --------------------------------------------------------------------------------------------------
 
     public String ls(String parameters) {
+        limparTerminal();
         // variavel result deverah conter o que vai ser impresso na tela apos comando do
         // usuário
         String result = "";
@@ -560,9 +685,8 @@ public class MyKernel2 implements Kernel {
             for (int i = 0; i < 20; i++) {
                 if (resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", "").equals("")) {
                 } else {
-                    sb.append(retornaNome(HD,
-                            binaryStringToInt(
-                                    resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", ""))));
+                    sb.append(retornaNome(HD, Integer.parseInt(resultado.substring(97 + (i * 10), 107 + (i * 10))
+                            .replaceAll("\\s+", ""))));
                     sb.append("  ");
 
                 }
@@ -573,7 +697,7 @@ public class MyKernel2 implements Kernel {
                 if (resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", "").equals("")) {
                 } else {
                     sb.append(retornaNome(HD,
-                            binaryStringToInt(
+                            Integer.parseInt(
                                     resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", ""))));
                     sb.append("  ");
 
@@ -613,14 +737,14 @@ public class MyKernel2 implements Kernel {
                         if (resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", "").equals("")) {
                         } else {
 
-                            String perm = retornaPermissao(HD, binaryStringToInt(
+                            String perm = retornaPermissao(HD, Integer.parseInt(
                                     resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", "")));
 
                             sb.append("d" + convertePermissao(perm, HD, aux));
 
                             sb.append("  ");
 
-                            String data = retornaData(HD, binaryStringToInt(
+                            String data = retornaData(HD, Integer.parseInt(
                                     resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", "")));
 
                             sb.append(converteData(data));
@@ -628,7 +752,7 @@ public class MyKernel2 implements Kernel {
                             sb.append("  ");
 
                             sb.append(retornaNome(HD,
-                                    binaryStringToInt(
+                                    Integer.parseInt(
                                             resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+",
                                                     ""))));
 
@@ -643,14 +767,14 @@ public class MyKernel2 implements Kernel {
                         if (resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", "").equals("")) {
                         } else {
 
-                            String perm = retornaPermissaoArquivo(HD, binaryStringToInt(
+                            String perm = retornaPermissaoArquivo(HD, Integer.parseInt(
                                     resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", "")));
 
                             sb.append("a" + convertePermissao(perm, HD, aux));
 
                             sb.append("  ");
 
-                            String data = retornaDataArquivo(HD, binaryStringToInt(
+                            String data = retornaDataArquivo(HD, Integer.parseInt(
                                     resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", "")));
 
                             sb.append(converteData(data));
@@ -658,7 +782,7 @@ public class MyKernel2 implements Kernel {
                             sb.append("  ");
 
                             sb.append(retornaNome(HD,
-                                    binaryStringToInt(
+                                    Integer.parseInt(
                                             resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+",
                                                     ""))));
                             sb.append("\n");
@@ -673,6 +797,7 @@ public class MyKernel2 implements Kernel {
                 }
 
             } else {
+
                 if (parameters.equals("-l")) {
 
                     int aux = dirAtual;
@@ -684,14 +809,14 @@ public class MyKernel2 implements Kernel {
                     for (int i = 0; i < 20; i++) {
                         if (resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", "").equals("")) {
                         } else {
-                            String perm = retornaPermissao(HD, binaryStringToInt(
+                            String perm = retornaPermissao(HD, Integer.parseInt(
                                     resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", "")));
 
                             sb.append("d" + convertePermissao(perm, HD, aux));
 
                             sb.append("  ");
 
-                            String data = retornaData(HD, binaryStringToInt(
+                            String data = retornaData(HD, Integer.parseInt(
                                     resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", "")));
 
                             sb.append(converteData(data));
@@ -699,7 +824,7 @@ public class MyKernel2 implements Kernel {
                             sb.append("  ");
 
                             sb.append(retornaNome(HD,
-                                    binaryStringToInt(
+                                    Integer.parseInt(
                                             resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+",
                                                     ""))));
                             sb.append("\n");
@@ -710,14 +835,14 @@ public class MyKernel2 implements Kernel {
                         if (resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", "").equals("")) {
                         } else {
 
-                            String perm = retornaPermissaoArquivo(HD, binaryStringToInt(
+                            String perm = retornaPermissaoArquivo(HD, Integer.parseInt(
                                     resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", "")));
 
                             sb.append("a" + convertePermissao(perm, HD, aux));
 
                             sb.append("  ");
 
-                            String data = retornaDataArquivo(HD, binaryStringToInt(
+                            String data = retornaDataArquivo(HD, Integer.parseInt(
                                     resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", "")));
 
                             sb.append(converteData(data));
@@ -725,7 +850,7 @@ public class MyKernel2 implements Kernel {
                             sb.append("  ");
 
                             sb.append(retornaNome(HD,
-                                    binaryStringToInt(
+                                    Integer.parseInt(
                                             resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+",
                                                     ""))));
                             sb.append("\n");
@@ -755,7 +880,7 @@ public class MyKernel2 implements Kernel {
                         if (resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+", "").equals("")) {
                         } else {
                             sb.append(retornaNome(HD,
-                                    binaryStringToInt(
+                                    Integer.parseInt(
                                             resultado.substring(97 + (i * 10), 107 + (i * 10)).replaceAll("\\s+",
                                                     ""))));
                             sb.append("  ");
@@ -768,7 +893,7 @@ public class MyKernel2 implements Kernel {
                         if (resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+", "").equals("")) {
                         } else {
                             sb.append(retornaNome(HD,
-                                    binaryStringToInt(
+                                    Integer.parseInt(
                                             resultado.substring(297 + (i * 10), 307 + (i * 10)).replaceAll("\\s+",
                                                     ""))));
                             sb.append("  ");
@@ -788,11 +913,13 @@ public class MyKernel2 implements Kernel {
             }
         }
 
+        // exibeHD(HD, dirAtual);
         // fim da implementacao do aluno
         return result;
     }
 
     public String mkdir(String parameters) {
+        limparTerminal();
         // variavel result deverah conter o que vai ser impresso na tela apos comando do
         // usuário
         String result = "";
@@ -849,7 +976,7 @@ public class MyKernel2 implements Kernel {
                         if (posicao == -10) {
                             return "HD cheio";
                         }
-                        if (!parte.matches("^[a-zA-Z0-9].*")) {
+                        if (!parte.matches("^[a-zA-Z0-9]*")) {
                             return "Nome invalido";
                         }
 
@@ -868,7 +995,7 @@ public class MyKernel2 implements Kernel {
 
         }
 
-        // exibeHD(HD, aux);
+        exibeHD(HD, aux);
 
         // inicio da implementacao do aluno
         // fim da implementacao do aluno
@@ -961,11 +1088,6 @@ public class MyKernel2 implements Kernel {
         String caminho;
         int aux = dirAtual;
 
-        for (String parte : partes) {
-            System.out.println(parte);
-
-        }
-
         if (partes.length <= 1) {
             return "Erro Parametros insuficientes";
 
@@ -990,8 +1112,6 @@ public class MyKernel2 implements Kernel {
             String nomeArquivo;
             String caminhoNovo;
 
-            System.out.println("Ultima barra " + ultimaBarraIndex);
-
             if (ultimaBarraIndex >= 0) {
                 if (ultimaBarraIndex == 0) {
                     caminhoNovo = "/";
@@ -1004,7 +1124,6 @@ public class MyKernel2 implements Kernel {
 
                     aux = buscaCaminho(HD, caminhoNovo, dirAtual);
 
-                    System.out.println("entrou aqui");
                 }
 
             } else {
@@ -1052,13 +1171,22 @@ public class MyKernel2 implements Kernel {
             permissao = partes[1];
             caminho = partes[2];
 
-            System.out.println("Mod " + mod);
-            System.out.println("Permissao " + permissao);
-            System.out.println("Caminho " + caminho);
+            if (mod.equals("-r") || mod.equals("-R")) {
+                int aux2 = buscaCaminho(HD, caminho, dirAtual);
+
+                if (aux2 == -1) {
+                    return "Diretorio nao existe";
+                } else {
+                    atualizaPermissaoGeral(HD, aux2, permissao);
+                }
+
+                result = "Permissao alterada com sucesso";
+
+            } else {
+                return "Parametros invalidos";
+            }
 
         }
-
-        System.out.println(partes.length);
 
         // inicio da implementacao do aluno
         // fim da implementacao do aluno
@@ -1098,11 +1226,7 @@ public class MyKernel2 implements Kernel {
 
         int ultimaBarraIndex = texto.lastIndexOf("/");
 
-        System.out.println("Ultima barra " + ultimaBarraIndex);
-
         if (ultimaBarraIndex >= 0) {
-
-            System.out.println("Tem barra");
 
             String primeiraParte = texto.substring(0, ultimaBarraIndex);
             String segundaParte = texto.substring(ultimaBarraIndex + 1);
@@ -1149,10 +1273,8 @@ public class MyKernel2 implements Kernel {
                     }
 
                     String ArquivoCriado = criaArquivo(nomeArquivo, aux, conteudoArquivo);
-
-                    atualizaPaiArquivo(HD, aux, posicao);
-
                     salvaNoHD(HD, ArquivoCriado, posicao);
+                    atualizaPaiArquivo(HD, aux, posicao);
 
                     result = "Arquivo criado";
 
@@ -1162,7 +1284,6 @@ public class MyKernel2 implements Kernel {
             }
 
         } else {
-            System.out.println("Nao tem barra");
 
             int aux = dirAtual;
 
@@ -1173,21 +1294,20 @@ public class MyKernel2 implements Kernel {
 
             int PA = procuraArquivo(HD, aux, nomeArquivo);
             int AC = arquivocheio(HD, aux);
+            int PF = procuraFilho(HD, aux, nomeArquivo);
 
             if (AC == -1) {
                 return "Quantidade de arquivos cheio";
             } else {
-                if (PA == -1) {
+                if (PA == -1 && PF == -1) {
                     int posicao = procuraPosicaoVaziaHD(HD);
                     if (posicao == -10) {
                         return "HD cheio";
                     }
 
                     String ArquivoCriado = criaArquivo(nomeArquivo, aux, conteudoArquivo);
-
-                    atualizaPaiArquivo(HD, aux, posicao);
-
                     salvaNoHD(HD, ArquivoCriado, posicao);
+                    atualizaPaiArquivo(HD, aux, posicao);
 
                     result = "Arquivo criado";
 
@@ -1228,8 +1348,6 @@ public class MyKernel2 implements Kernel {
             caminho = "";
             nomeArquivo = parameters;
 
-            System.out.println("Caminho " + caminho);
-            System.out.println("Nome do arquivo " + nomeArquivo);
         }
 
         if (caminho.equals("")) {
@@ -1294,7 +1412,7 @@ public class MyKernel2 implements Kernel {
         // numero de matricula
         String registration = "201911020008";
         // versao do sistema de arquivos
-        String version = "0.6";
+        String version = "0.7";
 
         result += "Nome do Aluno:        " + name;
         result += "\nMatricula do Aluno:   " + registration;
@@ -1309,11 +1427,11 @@ public class MyKernel2 implements Kernel {
     // ls
     // cat
     // mkdir
+    // mkdir a/../b/../c/../d/../a/Alberto/../../b/Betania/../../c/Cristina/../../d/Damaris/../../Rebeca/../Maria/../Bea
     // createfile
-    
+    // chmod
 
     // Funções em andamento
-    // chmod falta o -r
 
 
     // Funções não feitas

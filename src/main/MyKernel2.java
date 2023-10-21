@@ -10,6 +10,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Date;
 
 /**
@@ -88,9 +89,206 @@ public class MyKernel2 implements Kernel {
         return sb.toString();
     }
 
+    public static void apagaArquivos(HardDisk hd, int arquivo) {
+        String resultado = lerHD(hd, arquivo, 512);
+
+        System.out.println("Apagando Arquivo ...");
+
+        String estado = resultado.substring(0, 1);
+        String nome = resultado.substring(1, 87);
+        String pai = resultado.substring(87, 97);
+        String data = resultado.substring(97, 109);
+        String permissao = resultado.substring(109, 112);
+        String conteudo = resultado.substring(112, 512);
+
+        int p = Integer.parseInt(pai.replaceAll("\\s+", ""));
+
+        String paiArquivo = lerHD(hd, p, 512);
+
+        String estadoPAI = paiArquivo.substring(0, 1);
+        String nomePAI = paiArquivo.substring(1, 87);
+        String paiPAI = paiArquivo.substring(87, 97);
+        String dataPAI = paiArquivo.substring(497, 509);
+        String permissaoPAI = paiArquivo.substring(509, 512);
+
+        String[] dirArquivos = new String[20];
+        String[] dirFilhos = new String[20];
+
+        for (int i = 0; i < 20; i++) {
+            dirArquivos[i] = paiArquivo.substring(297 + (i * 10), 307 + (i * 10));
+            dirFilhos[i] = paiArquivo.substring(97 + (i * 10), 107 + (i * 10));
+        }
+
+        boolean tem = false;
+
+        for (int i = 0; i < 20; i++) {
+            if (dirArquivos[i].replaceAll("\\s+", "").equals(Integer.toString(arquivo))) {
+                dirArquivos[i] = String.format("%-" + 10 + "s", "");
+                tem = true;
+                break;
+            }
+        }
+
+        if (tem) {
+            StringBuilder arquivoPAI = new StringBuilder();
+            arquivoPAI.append(estadoPAI);
+            arquivoPAI.append(nomePAI);
+            arquivoPAI.append(paiPAI);
+            for (int i = 0; i < 20; i++) {
+                arquivoPAI.append(dirFilhos[i]);
+            }
+            for (int i = 0; i < 20; i++) {
+                arquivoPAI.append(dirArquivos[i]);
+            }
+
+            arquivoPAI.append(dataPAI);
+            arquivoPAI.append(permissaoPAI);
+
+            String converte = arquivoPAI.toString();
+            salvaNoHD(hd, converte, p);
+        }
+
+        estado = " ";
+        nome = " ";
+        pai = " ";
+        data = " ";
+        permissao = " ";
+        conteudo = " ";
+
+        salvaNoHD(hd, estado + nome + pai + data + permissao + conteudo, arquivo);
+
+    }
+
+    public static void apagaDir(HardDisk hd, int diretorio) {
+        String resultado = lerHD(hd, diretorio, 512);
+        System.out.println("Apagando Diretorio ...");
+
+        String estado = resultado.substring(0, 1);
+        String nome = resultado.substring(1, 87);
+        String pai = resultado.substring(87, 97);
+        String dirFilhos[] = new String[20];
+        String dirArquivos[] = new String[20];
+        String data = resultado.substring(497, 509);
+        String permissao = resultado.substring(509, 512);
+
+        for (int i = 0; i < 20; i++) {
+            dirFilhos[i] = resultado.substring(97 + (i * 10), 107 + (i * 10));
+        }
+
+        for (int i = 0; i < 20; i++) {
+            dirArquivos[i] = resultado.substring(297 + (i * 10), 307 + (i * 10));
+        }
+
+        int p = Integer.parseInt(pai.replaceAll("\\s+", ""));
+
+        String paiArquivo = lerHD(hd, p, 512);
+
+        String estadoPAI = paiArquivo.substring(0, 1);
+        String nomePAI = paiArquivo.substring(1, 87);
+        String paiPAI = paiArquivo.substring(87, 97);
+        String dataPAI = paiArquivo.substring(497, 509);
+        String permissaoPAI = paiArquivo.substring(509, 512);
+
+        String[] dirArquivosPAI = new String[20];
+        String[] dirFilhosPAI = new String[20];
+
+        for (int i = 0; i < 20; i++) {
+            dirArquivosPAI[i] = paiArquivo.substring(297 + (i * 10), 307 + (i * 10));
+            dirFilhosPAI[i] = paiArquivo.substring(97 + (i * 10), 107 + (i * 10));
+        }
+
+        boolean tem = false;
+
+        for (int i = 0; i < 20; i++) {
+            if (dirFilhosPAI[i].replaceAll("\\s+", "").equals(Integer.toString(diretorio))) {
+                dirFilhosPAI[i] = String.format("%-" + 10 + "s", "");
+                tem = true;
+                break;
+            }
+        }
+
+        if (tem) {
+
+            StringBuilder diretorioPAI = new StringBuilder();
+            diretorioPAI.append(estadoPAI);
+            diretorioPAI.append(nomePAI);
+            diretorioPAI.append(paiPAI);
+            for (int i = 0; i < 20; i++) {
+                diretorioPAI.append(dirFilhosPAI[i]);
+            }
+            for (int i = 0; i < 20; i++) {
+                diretorioPAI.append(dirArquivosPAI[i]);
+            }
+
+            diretorioPAI.append(dataPAI);
+            diretorioPAI.append(permissaoPAI);
+
+            String converte = diretorioPAI.toString();
+            salvaNoHD(hd, converte, p);
+        }
+
+        estado = " ";
+        nome = " ";
+        pai = " ";
+
+        StringBuilder dir = new StringBuilder();
+        dir.append(estado);
+        dir.append(nome);
+        dir.append(pai);
+        for (int i = 0; i < 20; i++) {
+            dirFilhos[i] = " ";
+            dir.append(dirFilhos[i]);
+        }
+        for (int i = 0; i < 20; i++) {
+            dirArquivos[i] = " ";
+            dir.append(dirArquivos[i]);
+        }
+
+        data = " ";
+        dir.append(data);
+        permissao = " ";
+        dir.append(permissao);
+
+        String converte = dir.toString();
+        salvaNoHD(hd, converte, diretorio);
+
+    }
+
+    public static void apagaGeral(HardDisk hd, int dirAtual) {
+        if (existeFilho(hd, dirAtual) == 1) {// 1 é pq existe algum filho
+            int[] todosFilhos = new int[20];
+            todosFilhos = retornaFilho(hd, dirAtual);
+
+            for (int i = 0; i < 20; i++) {
+                if (todosFilhos[i] != -1) {
+                    apagaGeral(hd, todosFilhos[i]);
+                }
+            }
+
+            for (int i = 0; i < 20; i++) {
+                int[] todosArquivos = retornaArquivo(hd, dirAtual); // Modificado para retornar arquivos de dirAtual
+
+                if (todosArquivos[i] != -1) {
+                    apagaArquivos(hd, todosArquivos[i]);
+                }
+            }
+
+            int[] tFilhos = retornaFilho(hd, dirAtual); // Modificado para retornar filhos de dirAtual
+            for (int i = 0; i < 20; i++) {
+                if (tFilhos[i] != -1) {
+
+                    apagaDir(hd, tFilhos[i]);
+                }
+            }
+        } else {
+
+        }
+
+    }
+
     public static void atualizaPermissaoGeral(HardDisk hd, int dirAtual, String permissao) {
-        // 1 é pq existe algum filho
-        if (existeFilho(hd, dirAtual) == 1) {
+
+        if (existeFilho(hd, dirAtual) == 1) {// 1 é pq existe algum filho
             int[] todosFilhos = new int[20];
             todosFilhos = retornaFilho(hd, dirAtual);
 
@@ -115,7 +313,7 @@ public class MyKernel2 implements Kernel {
                 }
             }
         } else {
-            // O que fazer quando não há filhos?
+
         }
     }
 
@@ -294,8 +492,6 @@ public class MyKernel2 implements Kernel {
         String permissao = "777";
         String conteudoArquivo = conteudo + String.format("%-" + (400 - conteudo.length()) + "s", "");
 
-        // createfile a Maria chata
-
         return estado + nome + pai + data + permissao + conteudoArquivo;
     }
 
@@ -414,6 +610,7 @@ public class MyKernel2 implements Kernel {
         for (int i = 0; i < 134217728; i++) {
             String info = lerHD(hd, i, 1);
             if (!info.equals("d") && !info.equals("a")) {
+                System.out.println("Posição: " + i);
                 return i;
             }
         }
@@ -668,7 +865,6 @@ public class MyKernel2 implements Kernel {
     // --------------------------------------------------------------------------------------------------
 
     public String ls(String parameters) {
-        limparTerminal();
         // variavel result deverah conter o que vai ser impresso na tela apos comando do
         // usuário
         String result = "";
@@ -995,7 +1191,7 @@ public class MyKernel2 implements Kernel {
 
         }
 
-        exibeHD(HD, aux);
+        // exibeHD(HD, aux);
 
         // inicio da implementacao do aluno
         // fim da implementacao do aluno
@@ -1036,6 +1232,28 @@ public class MyKernel2 implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
+        if (parameters == "") {
+            return "Indique um caminho (nada foi apagado)";
+        }
+        int aux = buscaCaminho(HD, parameters, dirAtual);
+        if (retornaEstado(HD, aux) == "a") {
+            return "Esse comando não funciona em Arquivos (nada foi apagado)";
+        }
+        if (aux == -1) {
+            return "Diretorio não existe (nada foi apagado)";
+        }
+
+        int dir = existeFilho(HD, aux);
+        int arq = existeArquivo(HD, aux);
+
+        if (dir == 1 || arq == 1) {
+            return "Diretorio deve estar vazio para poder ser apagado";
+        }
+
+        apagaDir(HD, aux);
+
+        result = "Diretorio apagado com sucesso";
+
         // fim da implementacao do aluno
         return result;
     }
@@ -1060,8 +1278,10 @@ public class MyKernel2 implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
+        
         // fim da implementacao do aluno
         return result;
+
     }
 
     public String rm(String parameters) {
@@ -1072,125 +1292,150 @@ public class MyKernel2 implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
+
+        String[] partes = parameters.split(" ");
+
+        if (partes.length == 2) {
+            String caminho = partes[1];
+            String comando = partes[0];
+
+            System.out.println("Comando: " + partes[0]);
+            System.out.println(partes[1]);
+
+            if (!comando.equals("-R")) {
+                return "Parametros invalidos (nenhum Diretorio apagado)";
+            }
+
+            int aux = buscaCaminho(HD, caminho, 512);
+
+            if (retornaEstado(HD, aux).equals("a")) {
+                return "Esse comando só é válido para Diretorios, para arquivos retire o -R (nenhum Diretorio apagado)";
+            }
+
+            if (aux == -1) {
+                return "Diretorio não existe (nenhum Arquivo apagado)";
+            }
+
+            apagaGeral(HD, aux);
+
+        } else if (partes.length == 1) {
+
+            int ultimaBarraIndex = parameters.lastIndexOf("/");
+
+            String caminho = "";
+            String nomeArquivo = "";
+            int aux = dirAtual;
+
+            if (ultimaBarraIndex >= 0) {
+                if (ultimaBarraIndex == 0) {
+                    caminho = "/";
+                    nomeArquivo = parameters.substring(ultimaBarraIndex + 1);
+                } else {
+                    caminho = parameters.substring(0, ultimaBarraIndex);
+                    nomeArquivo = parameters.substring(ultimaBarraIndex + 1);
+                }
+
+            } else {
+                caminho = "";
+                nomeArquivo = parameters;
+
+            }
+
+            if (caminho.equals("")) {
+                aux = dirAtual;
+            } else {
+                aux = buscaCaminho(HD, caminho, dirAtual);
+                if (aux == -1) {
+                    return "Diretorio nao existe (nenhum Arquivo apagado)";
+                }
+            }
+
+            if (retornaEstado(HD, aux).equals("d")) {
+                return "Esse comando só é válido para Arquivos, para diretórios coloque o -R (nenhum Arquivo apagado)";
+            }
+
+            int Arquivo = procuraArquivo(HD, aux, nomeArquivo);
+
+            if (Arquivo == -1) {
+                return "Arquivo nao existe (nenhum Arquivo apagado)";
+            }
+
+            apagaArquivos(HD, Arquivo);
+            return "Arquivo apagado com sucesso";
+            // só arquivos
+
+        } else {
+            return "Parametros invalidos (nenhum Arquivo apagado)";
+        }
+
         // fim da implementacao do aluno
         return result;
     }
 
     public String chmod(String parameters) {
-        // variavel result deverah conter o que vai ser impresso na tela apos comando do
-        // usuário
-        String result = "";
         System.out.println("Chamada de Sistema: chmod");
         System.out.println("\tParametros: " + parameters);
 
         String[] partes = parameters.split(" ");
-        String permissao;
-        String caminho;
-        int aux = dirAtual;
 
-        if (partes.length <= 1) {
-            return "Erro Parametros insuficientes";
-
+        if (partes.length < 2) {
+            return "Erro: Parâmetros insuficientes";
         }
 
-        else if (partes.length == 2) {
-            permissao = partes[0];
-            caminho = partes[1];
+        String mod = partes[0];
+        String permissao = partes[1];
+        String caminho = partes[2];
 
-            if (permissao.length() != 3) {
-                return "Permissao invalida, digite 3 numeros de 0 a 7";
-            }
-            if (!permissao.matches("[0-7]+")) {
-                return "Permissao invalida, digite apenas numeros de 0 a 7";
-            }
+        if (mod.equals("-r") || mod.equals("-R")) {
+            int aux2 = buscaCaminho(HD, caminho, dirAtual);
 
-            if (permissao.equals("-r") || permissao.equals("-R") || caminho.equals("-r") || caminho.equals("-R")) {
-                return "Permissao invalida";
+            if (aux2 == -1) {
+                return "Diretório não existe";
             }
 
-            int ultimaBarraIndex = caminho.lastIndexOf("/");
-            String nomeArquivo;
-            String caminhoNovo;
+            atualizaPermissaoGeral(HD, aux2, permissao);
+            return "Permissão alterada com sucesso";
+        } else if (partes.length == 3) {
+            int aux = dirAtual;
+            String[] caminhoPartes = caminho.split("/");
+            String nomeArquivo = caminhoPartes[caminhoPartes.length - 1];
+            String caminhoNovo = caminhoPartes.length > 1
+                    ? String.join("/", Arrays.copyOf(caminhoPartes, caminhoPartes.length - 1))
+                    : "";
 
-            if (ultimaBarraIndex >= 0) {
-                if (ultimaBarraIndex == 0) {
-                    caminhoNovo = "/";
-                    nomeArquivo = caminho.substring(ultimaBarraIndex + 1);
-
-                    aux = buscaCaminho(HD, caminhoNovo, dirAtual);
-                } else {
-                    caminhoNovo = caminho.substring(0, ultimaBarraIndex);
-                    nomeArquivo = caminho.substring(ultimaBarraIndex + 1);
-
-                    aux = buscaCaminho(HD, caminhoNovo, dirAtual);
-
-                }
-
-            } else {
-
-                caminhoNovo = "";
-                nomeArquivo = caminho;
-
-                aux = dirAtual;
-
+            if (caminhoPartes.length == 1 && caminho.equals("-r") || caminho.equals("-R")) {
+                return "Permissão inválida";
             }
+
+            aux = buscaCaminho(HD, caminhoNovo, dirAtual);
+
             if (aux == -1) {
-                return "Diretorio nao existe";
+                return "Diretório não existe";
+            }
 
+            int eArquivo = procuraArquivo(HD, aux, nomeArquivo);
+            int eDiretorio = procuraFilho(HD, aux, nomeArquivo);
+
+            if (eArquivo == -1 && eDiretorio == -1) {
+                return "Arquivo ou Diretório não existe";
+            } else if (eDiretorio != -1) {
+                caminhoNovo = caminho;
+                aux = buscaCaminho(HD, caminhoNovo, dirAtual);
+                atualizaPermissaoDir(HD, eDiretorio, permissao);
+                return "Permissão do Diretório alterada com sucesso";
             } else {
-                int eArquivo = procuraArquivo(HD, aux, nomeArquivo);
-
-                if (eArquivo == -1) {
-                    int eDiretorio = procuraFilho(HD, aux, nomeArquivo);
-
-                    if (eDiretorio == -1) {
-                        return "Arquivo ou Diretorio nao existe";
-                    } else {
-                        caminhoNovo = caminho;
-
-                        aux = buscaCaminho(HD, caminhoNovo, dirAtual);
-                        atualizaPermissaoDir(HD, eDiretorio, permissao);
-
-                        result = "Permissao do Diretorio alterada com sucesso";
-                        return result;
-                    }
-                }
-
                 int PA = procuraArquivo(HD, aux, nomeArquivo);
 
                 if (PA == -1) {
-                    return "Arquivo nao existe";
+                    return "Arquivo não existe";
                 }
 
                 atualizaPermissaoArquivo(HD, eArquivo, permissao);
-                result = "Permissao alterada com sucesso";
+                return "Permissão alterada com sucesso";
             }
-
         } else {
-            String mod = partes[0];
-            permissao = partes[1];
-            caminho = partes[2];
-
-            if (mod.equals("-r") || mod.equals("-R")) {
-                int aux2 = buscaCaminho(HD, caminho, dirAtual);
-
-                if (aux2 == -1) {
-                    return "Diretorio nao existe";
-                } else {
-                    atualizaPermissaoGeral(HD, aux2, permissao);
-                }
-
-                result = "Permissao alterada com sucesso";
-
-            } else {
-                return "Parametros invalidos";
-            }
-
+            return "Parâmetros inválidos";
         }
-
-        // inicio da implementacao do aluno
-        // fim da implementacao do aluno
-        return result;
     }
 
     public String createfile(String parameters) {
@@ -1412,7 +1657,7 @@ public class MyKernel2 implements Kernel {
         // numero de matricula
         String registration = "201911020008";
         // versao do sistema de arquivos
-        String version = "0.7";
+        String version = "0.9";
 
         result += "Nome do Aluno:        " + name;
         result += "\nMatricula do Aluno:   " + registration;
@@ -1430,15 +1675,14 @@ public class MyKernel2 implements Kernel {
     // mkdir a/../b/../c/../d/../a/Alberto/../../b/Betania/../../c/Cristina/../../d/Damaris/../../Rebeca/../Maria/../Bea
     // createfile
     // chmod
+    // rm
+    // rmdir (verificar com o Douglas se é isso msm)
 
     // Funções em andamento
-
+    // mv
 
     // Funções não feitas
-    // rmdir
     // cp
-    // mv
-    // rm
     // batch
     // dump
 

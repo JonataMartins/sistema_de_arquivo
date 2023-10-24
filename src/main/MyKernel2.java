@@ -444,41 +444,11 @@ public class MyKernel2 implements Kernel {
 
         String resultado = lerHD(hd, dirAtual, 512);
 
-        String estado = resultado.substring(0, 1);
-        String nome = resultado.substring(1, 87);
-        String pai = resultado.substring(87, 97);
-        String dirFilhos[] = new String[20];
-        String dirArquivos[] = new String[20];
-        String data = resultado.substring(497, 509);
-        String permissao = resultado.substring(509, 512);
+        String resto = resultado.substring(0, 509);
 
-        permissao = perm;
+        String permissao = perm;
 
-        for (int i = 0; i < 20; i++) {
-            dirFilhos[i] = resultado.substring(97 + (i * 10), 107 + (i * 10));
-        }
-
-        for (int i = 0; i < 20; i++) {
-            dirArquivos[i] = resultado.substring(297 + (i * 10), 307 + (i * 10));
-        }
-
-        StringBuilder filho = new StringBuilder();
-        filho.append(estado);
-        filho.append(nome);
-        filho.append(pai);
-        for (int i = 0; i < 20; i++) {
-            filho.append(dirFilhos[i]);
-        }
-
-        for (int i = 0; i < 20; i++) {
-            filho.append(dirArquivos[i]);
-        }
-
-        filho.append(data);
-        filho.append(permissao);
-
-        String converte = filho.toString();
-        salvaNoHD(hd, converte, dirAtual);
+        salvaNoHD(hd, resto+permissao, dirAtual);
 
     }
 
@@ -1278,35 +1248,6 @@ public class MyKernel2 implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
-
-        if(parameters == ""){
-            return "Coloque caminhos para mover";
-        }
-
-        String[] partes = texto.split(" ", 2);
-
-        String caminho1 = partes[0];
-        String caminho2 = partes[1];
-
-        int cam1 = buscaCaminho(HD, partes[0], 512);
-        int cam2 = buscaCaminho(HD, partes[1], 512);
-        
-        if(cam1 == -1){
-            if(cam2 == -1){
-                return "nenhum dos caminhos existe, nada foi movido";
-            }
-            return " o primeiro caminho não existe, nada foi movido";
-        }
-
-        if(cam2 ==-1){
-            return "o segundo caminho não existe, nada foi movido";
-        }
-
-        
-
-
-
-
         
         // fim da implementacao do aluno
         return result;
@@ -1705,7 +1646,7 @@ public class MyKernel2 implements Kernel {
     // createfile
     // chmod
     // rm
-    // rmdir (verificar com o Douglas se é isso msm)
+    // rmdir
 
     // Funções em andamento
     // mv

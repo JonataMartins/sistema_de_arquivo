@@ -1278,6 +1278,35 @@ public class MyKernel2 implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
+
+        if(parameters == ""){
+            return "Coloque caminhos para mover";
+        }
+
+        String[] partes = texto.split(" ", 2);
+
+        String caminho1 = partes[0];
+        String caminho2 = partes[1];
+
+        int cam1 = buscaCaminho(HD, partes[0], 512);
+        int cam2 = buscaCaminho(HD, partes[1], 512);
+        
+        if(cam1 == -1){
+            if(cam2 == -1){
+                return "nenhum dos caminhos existe, nada foi movido";
+            }
+            return " o primeiro caminho não existe, nada foi movido";
+        }
+
+        if(cam2 ==-1){
+            return "o segundo caminho não existe, nada foi movido";
+        }
+
+        
+
+
+
+
         
         // fim da implementacao do aluno
         return result;

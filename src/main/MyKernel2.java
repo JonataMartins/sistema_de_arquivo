@@ -862,9 +862,132 @@ public class MyKernel2 implements Kernel {
 
         atualizaPaiArquivo(HD, mv2, mv1);
 
-        System.out.println("novo: " + novo);
-
         return "Movido com sucesso";
+    }
+
+    public static String cpArq(HardDisk HD, int cam1, int cam2, String arquivo1, String arquivo2) {
+
+        int mv1 = procuraArquivo(HD, cam1, arquivo1);
+        int mv2 = procuraFilho(HD, cam2, arquivo2);
+
+        int cheio = arquivocheio(HD, mv2);
+
+        if (cheio == -1) {
+            return "O Diretorio de destino está cheio (nada foi Copiado)";
+        }
+
+        String resultado1 = lerHD(HD, mv1, 512);
+
+        String estado1 = resultado1.substring(0, 1);
+        String nome1 = resultado1.substring(1, 87);
+        String pai = resultado1.substring(87, 97);
+        String resto = resultado1.substring(97, 512);
+
+        if (!estado1.equals("a")) {
+            return "Esse comando só é válido para Arquivos (nada foi Copiado)";
+        }
+
+        int PF = procuraArquivo(HD, cam2, nome1);
+        int PF2 = procuraFilho(HD, cam2, nome1);
+
+        if (PF != -1 || PF2 != -1) {
+            return "Já existe um diretorio ou arquivo com esse nome no caminho de destino (nada foi Copiado)";
+        }
+
+        pai = String.format("%-" + 10 + "s", mv2);
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(estado1);
+        sb.append(nome1);
+        sb.append(pai);
+        sb.append(resto);
+
+        String novo = sb.toString();
+
+        int proc = procuraPosicaoVaziaHD(HD);
+
+        salvaNoHD(HD, novo, proc);
+
+        atualizaPaiArquivo(HD, mv2, proc);
+
+        return "Copiado com sucesso";
+    }
+
+    public static String cpDir(HardDisk HD, int cam1, int cam2, String arquivo1, String arquivo2) {
+
+        int mv1 = procuraFilho(HD, cam1, arquivo1);
+        int mv2 = procuraFilho(HD, cam2, arquivo2);
+
+        int cheio = filhocheio(HD, mv2);
+
+        if(procuraFilho(HD, mv2, arquivo1) != -1){
+            return "já existe algo com esse nome";
+        }
+
+        if (cheio == -1) {
+            return "O Diretorio de destino está cheio (nada foi Copiado)";
+        }
+
+        String resultado1 = lerHD(HD, mv1, 512);
+
+        String estado1 = resultado1.substring(0, 1);
+        String nome1 = resultado1.substring(1, 87);
+        String pai = resultado1.substring(87, 97);
+        String data = resultado1.substring(497, 509);
+        String permissao = resultado1.substring(509, 512);
+
+        String[] dirFilhos = new String[20];
+        String[] dirArquivos = new String[20];
+
+        for (int i = 0; i < 20; i++) {
+            dirFilhos[i] = resultado1.substring(97 + (i * 10), 107 + (i * 10));
+            dirArquivos[i] = resultado1.substring(297 + (i * 10), 307 + (i * 10));
+
+            dirArquivos[i] = String.format("%-" + 10 + "s", "");
+            dirFilhos[i] = String.format("%-" + 10 + "s", "");
+        }
+
+        if (!estado1.equals("d")) {
+            return "Esse comando só é válido para Diretorios (nada foi Copiado)";
+        }
+
+        int PF = procuraFilho(HD, cam2, nome1);
+        int PF2 = procuraArquivo(HD, cam2, nome1);
+
+        if (PF != -1 || PF2 != -1) {
+            return "Já existe um diretorio ou um arquivo com esse nome no caminho de destino (nada foi Copiado)";
+        }
+
+        pai = String.format("%-" + 10 + "s", mv2);
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(estado1);
+        sb.append(nome1);
+        sb.append(pai);
+        
+        for (int i = 0; i < 20; i++) {
+            sb.append(dirFilhos[i]);
+        }
+
+        for (int i = 0; i < 20; i++) {
+            sb.append(dirArquivos[i]);
+        }
+
+        sb.append(data);
+        sb.append(permissao);
+
+        String novo = sb.toString();
+
+        int proc = procuraPosicaoVaziaHD(HD);
+
+        salvaNoHD(HD, novo, proc);
+
+        atualizaPaiDir(HD, mv2, proc);
+
+
+        return "Copiado com sucesso";
     }
 
     // Retorno de Nomes ----------------------------------------------
@@ -1252,8 +1375,8 @@ public class MyKernel2 implements Kernel {
             }
         }
 
-        exibeHD(HD, dirAtual);
-        // fim da implementacao do aluno
+        //exibeHD(HD, dirAtual);
+        //fim da implementacao do aluno
         return result;
     }
 
@@ -1307,7 +1430,12 @@ public class MyKernel2 implements Kernel {
                 int FC = filhocheio(HD, aux);
 
                 if (FC == -1) {
-                    return "Qunatidade de diretorio cheio";
+                    if (PF != -1) {
+                        aux = PF;
+                    } else {
+                        return "Quantidade de diretorio cheio";
+                    }
+
                 } else {
                     if (PF == -1 && PA == -1) {
                         String criado = criaDir(parte, aux);
@@ -1409,6 +1537,154 @@ public class MyKernel2 implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
+        if (parameters == "") {
+            return "Indique os dois caminho (nada foi copiado)";
+        }
+
+        String[] partes = parameters.split(" ");
+
+        if (partes.length != 2) {
+            return "Parametros invalidos (nada foi copiado)";
+        }
+
+        if (partes[0].equals("/")) {
+            return "Não é possivel copiar a raiz (nada foi copiado)";
+        }
+
+        String caminho1, caminho2, arquivo1, arquivo2;
+
+        int posicao = partes[0].indexOf("/");
+        if (posicao > 1) {
+            int ultimaBarraIndex = partes[0].lastIndexOf("/");
+            caminho1 = partes[0].substring(0, ultimaBarraIndex);
+            arquivo1 = partes[0].substring(ultimaBarraIndex + 1);
+        } else {
+
+            if (partes[0].startsWith("/")) {
+                caminho1 = "/";
+                arquivo1 = partes[0].substring(1);
+            } else {
+                caminho1 = ".";
+                arquivo1 = partes[0];
+            }
+
+        }
+
+        posicao = partes[1].indexOf("/");
+        if (posicao > 1) {
+            int ultimaBarraIndex = partes[1].lastIndexOf("/");
+            caminho2 = partes[1].substring(0, ultimaBarraIndex);
+            arquivo2 = partes[1].substring(ultimaBarraIndex + 1);
+        } else {
+            if (partes[1].startsWith("/")) {
+                caminho2 = "/";
+                arquivo2 = partes[1].substring(1);
+            } else {
+                caminho2 = ".";
+                arquivo2 = partes[1];
+            }
+
+        }
+
+        int cam1 = buscaCaminho(HD, caminho1, dirAtual);
+        int cam2 = buscaCaminho(HD, caminho2, dirAtual);
+
+        if (cam1 == -1 || cam2 == -1) {
+            return "Caminho não existe (nada foi copiado)";
+        }
+
+        int pa = procuraArquivo(HD, cam2, arquivo2);
+
+        if (pa != -1) {
+            return "o segundo caminho não pode ser um arquivo, nada foi copiado";
+        }
+
+        if (cam1 == cam2) {
+
+            int diretorio = procuraFilho(HD, cam1, arquivo1);
+            int arquivo = procuraArquivo(HD, cam1, arquivo1);
+
+            if (diretorio == -1 && arquivo == -1) {
+                return "O Arquivo ou diretorio não existe, nada foi copiado";
+            }
+
+            int filho;
+
+            if (diretorio != -1) {
+                filho = diretorio;
+
+                int existe = procuraFilho(HD, cam2, arquivo2);
+                int existe2 = procuraArquivo(HD, cam2, arquivo2);
+
+                if (existe != -1 && existe2 != -1) {
+                    return "Já existe um diretorio ou um arquivo com esse nome no caminho de destino (nada foi copiado)";
+                }
+
+                if (existe != -1 || existe2 != -1) {
+                    if (existe != -1) {
+                         result = cpDir(HD, cam1, cam2, arquivo1, arquivo2);
+                    }
+
+                    return result;
+                }
+            } else {
+                filho = arquivo;
+
+                int existe = procuraFilho(HD, cam2, arquivo2);
+                int existe2 = procuraArquivo(HD, cam2, arquivo2);
+
+                if (existe != -1 && existe2 != -1) {
+                    return "Já existe um diretorio ou um arquivo com esse nome no caminho de destino (nada foi copiado)";
+                }
+
+                if (existe != -1 || existe2 != -1) {
+                    if (existe != -1) {
+                         result = cpArq(HD, cam1, cam2, arquivo1, arquivo2);
+                        return result;
+                    }
+
+                    return "Não era pra isso ter acontecido, mas se aconteceu, nada foi copiado";
+
+                }
+
+            }
+
+            String resultado = lerHD(HD, filho, 512);
+
+            String estado = resultado.substring(0, 1);
+            String nome = resultado.substring(1, 87);
+            String resto = resultado.substring(87, 512);
+
+            nome = String.format("%-" + 86 + "s", arquivo2);
+
+            if (!nome.matches("^[a-zA-Z0-9]*")) {
+                return "Nome invalido";
+            }
+
+            String novo = estado + nome + resto;
+
+            salvaNoHD(HD, novo, filho);
+
+            return "Nome alterado com sucesso";
+        } else {
+
+            int r = procuraFilho(HD, cam1, arquivo1);
+            int l = procuraArquivo(HD, cam1, arquivo1);
+
+            if (r == -1 && l == -1) {
+                return "o arquivo ou diretório não existe, nada foi copiado";
+            }
+
+            if (r != -1) {
+                result = cpDir(HD, cam1, cam2, arquivo1, arquivo2);
+            }
+
+            if (l != -1) {
+                result = cpArq(HD, cam1, cam2, arquivo1, arquivo2);
+            }
+
+        }
+
         // fim da implementacao do aluno
         return result;
     }
@@ -1431,10 +1707,14 @@ public class MyKernel2 implements Kernel {
             return "Parametros invalidos (nada foi Movido)";
         }
 
+        if (partes[0].equals("/")) {
+            return "Não é possivel mover a raiz";
+        }
+
         String caminho1, caminho2, arquivo1, arquivo2;
 
         int posicao = partes[0].indexOf("/");
-        if (posicao != -1) {
+        if (posicao > 1) {
             int ultimaBarraIndex = partes[0].lastIndexOf("/");
             caminho1 = partes[0].substring(0, ultimaBarraIndex);
             arquivo1 = partes[0].substring(ultimaBarraIndex + 1);
@@ -1451,7 +1731,7 @@ public class MyKernel2 implements Kernel {
         }
 
         posicao = partes[1].indexOf("/");
-        if (posicao != -1) {
+        if (posicao > 1) {
             int ultimaBarraIndex = partes[1].lastIndexOf("/");
             caminho2 = partes[1].substring(0, ultimaBarraIndex);
             arquivo2 = partes[1].substring(ultimaBarraIndex + 1);
@@ -1536,6 +1816,10 @@ public class MyKernel2 implements Kernel {
             String resto = resultado.substring(87, 512);
 
             nome = String.format("%-" + 86 + "s", arquivo2);
+
+            if (!nome.matches("^[a-zA-Z0-9]*")) {
+                return "Nome invalido";
+            }
 
             String novo = estado + nome + resto;
 
@@ -1964,9 +2248,9 @@ public class MyKernel2 implements Kernel {
 
     // Funções em andamento
     // mv
+    // cp
 
     // Funções não feitas
-    // cp
     // batch
     // dump
 
